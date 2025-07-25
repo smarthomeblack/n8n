@@ -537,3 +537,70 @@ Workflow này tích hợp với nhiều dịch vụ:
 - Biển số xe được cố định trong code, cần cập nhật nếu muốn kiểm tra biển số khác
 - Các nguồn tin tức có thể thay đổi cấu trúc RSS, cần kiểm tra định kỳ
 - Cần đảm bảo các kết nối API (Gmail, OpenAI, Home Assistant) luôn hoạt động
+
+---
+
+# Sơ Đồ Kiến Trúc Hệ Thống
+
+```mermaid
+graph TD
+    subgraph User Interaction
+        User[<fa:fa-user> User (Sếp Black)]
+    end
+
+    subgraph n8n Workflows
+        ZaloBot["Zalo Chat AI.json<br>(Webhook Trigger)"]
+        MCP["MCP Server.json<br>(MCP Triggers)"]
+        TraCuu["Tra Cứu.json<br>(Sub-Workflow)"]
+        Download["Download.json<br>(Sub-Workflow)"]
+        Auto["Automatically.json<br>(Schedule & RSS Triggers)"]
+    end
+
+    subgraph External Services & APIs
+        ZaloAPI[<fa:fa-comments> Zalo Platform]
+        HomeAssistant[<fa:fa-home> Home Assistant]
+        Google[<fa:fa-google> Google Services<br>(Gmail, Calendar, Drive, Gemini)]
+        OpenAI[<fa:fa-robot> OpenAI / DeepSeek]
+        Postgres[<fa:fa-database> PostgreSQL DB<br>- histories_private<br>- vnnew]
+        PhatNguoi["phatnguoi.vn"]
+        XoSo["xosodaiphat.com"]
+        DangKiem["app.vr.org.vn"]
+        AmLich["24h.com.vn"]
+        RSS[<fa:fa-rss> RSS Feeds<br>(VnExpress, ThanhNien, DanTri)]
+    end
+
+    %% Main flow from User to AI and back
+    User -- "Nhắn tin qua Zalo (@n8n)" --> HomeAssistant
+    HomeAssistant -- "POST to Webhook" --> ZaloBot
+    ZaloBot -- "Sử dụng các tools" --> MCP
+    ZaloBot -- "Gọi Sub-Workflow" --> Download
+    ZaloBot -- "Lưu/Đọc Lịch sử Chat" --> Postgres
+    ZaloBot -- "Gửi phản hồi" --> HomeAssistant
+    HomeAssistant -- "Trả lời tin nhắn Zalo" --> User
+
+    %% MCP Server as a Tool Hub
+    MCP -- "Gọi Sub-Workflow Tra Cứu" --> TraCuu
+    MCP -- "Tương tác" --> Google
+    MCP -- "Tương tác" --> OpenAI
+
+    %% Sub-Workflow Connections
+    TraCuu -- "API Call" --> PhatNguoi
+    TraCuu -- "API Call & Captcha" --> DangKiem & OpenAI
+    TraCuu -- "API Call" --> XoSo
+    TraCuu -- "API Call" --> AmLich
+    Download -- "Tải file" --> Google
+    Download -- "Gửi file qua Zalo" --> HomeAssistant
+
+    %% Automated Workflow
+    Auto -- "Phân loại Email" --> Google & OpenAI
+    Auto -- "Kiểm tra Phạt nguội" --> PhatNguoi
+    Auto -- "Gửi cảnh báo Phạt nguội" --> HomeAssistant
+    Auto -- "Lấy tin tức" --> RSS
+    Auto -- "Lưu tin tức" --> Postgres
+
+    %% Style Definitions
+    classDef n8n fill:#FF9900,stroke:#333,stroke-width:2px;
+    class ZaloBot,MCP,TraCuu,Download,Auto n8n;
+    classDef external fill:#D6EAF8,stroke:#333,stroke-width:2px;
+    class ZaloAPI,HomeAssistant,Google,OpenAI,Postgres,PhatNguoi,XoSo,DangKiem,AmLich,RSS external;
+```
