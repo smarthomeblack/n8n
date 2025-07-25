@@ -1,0 +1,1090 @@
+{
+  "name": "Tra Cứu",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Kiểm tra dữ liệu đầu vào\nconst inputData = items[0];\nlet htmlContent = \"\";\n\n// Kiểm tra cấu trúc của dữ liệu đầu vào\nif (inputData && typeof inputData === 'object') {\n  // Nếu dữ liệu là một đối tượng, thử lấy thuộc tính 'data'\n  if (inputData.data) {\n    htmlContent = inputData.data;\n  } else if (inputData.json && inputData.json.data) {\n    // Thử lấy từ json.data nếu có\n    htmlContent = inputData.json.data;\n  } else {\n    // Thử tìm bất kỳ thuộc tính nào chứa chuỗi HTML\n    for (const key in inputData) {\n      if (typeof inputData[key] === 'string' && \n          (inputData[key].includes('<div') || inputData[key].includes('<table'))) {\n        htmlContent = inputData[key];\n        break;\n      }\n    }\n  }\n} else if (typeof inputData === 'string') {\n  // Nếu dữ liệu là một chuỗi, sử dụng trực tiếp\n  htmlContent = inputData;\n}\n\n// Xử lý HTML nếu có\nconst result = [];\nlet updateTime = \"\";\nlet dataSource = \"\";\n\nif (htmlContent && htmlContent.length > 0) {\n  try {\n    // Tìm tất cả các bảng trong HTML\n    const tableRegex = /<table[^>]*>[\\s\\S]*?<tbody>[\\s\\S]*?<\\/tbody>[\\s\\S]*?<\\/table>/g;\n    let tableMatch;\n    \n    while ((tableMatch = tableRegex.exec(htmlContent)) !== null) {\n      const tableContent = tableMatch[0];\n      const violation = {};\n      \n      // Tìm tất cả các hàng trong bảng\n      const rowRegex = /<tr>[\\s\\S]*?<td>(.*?)<\\/td>[\\s\\S]*?<td>([\\s\\S]*?)<\\/td>[\\s\\S]*?<\\/tr>/g;\n      let rowMatch;\n      \n      while ((rowMatch = rowRegex.exec(tableContent)) !== null) {\n        if (rowMatch.length >= 3) {\n          const key = rowMatch[1].replace(':', '').trim();\n          let value = rowMatch[2].trim();\n          \n          // Loại bỏ HTML tags từ giá trị\n          value = value.replace(/<button.*?<\\/button>/g, '');\n          value = value.replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim();\n          \n          // Chuyển đổi key thành camelCase\n          const camelKey = key\n            .normalize('NFD')\n            .replace(/[\\u0300-\\u036f]/g, '')\n            .replace(/đ/g, 'd')\n            .replace(/Đ/g, 'D')\n            .replace(/\\s+(.)/g, (match, group) => group.toUpperCase())\n            .replace(/\\s/g, '')\n            .replace(/^(.)/, (match, group) => group.toLowerCase());\n          \n          violation[camelKey] = value;\n        }\n      }\n      \n      // Chỉ thêm vi phạm nếu có ít nhất một trường dữ liệu\n      if (Object.keys(violation).length > 0) {\n        result.push(violation);\n      }\n    }\n    \n    // Trích xuất thời gian cập nhật\n    const updateTimeMatch = htmlContent.match(/Dữ liệu được cập nhật vào lúc: ([\\d:, -]+)/);\n    if (updateTimeMatch && updateTimeMatch[1]) {\n      updateTime = updateTimeMatch[1].trim();\n    }\n    \n    // Trích xuất nguồn dữ liệu\n    const sourceMatch = htmlContent.match(/Nguồn: <span[^>]*>(.*?)<\\/span>/);\n    if (sourceMatch && sourceMatch[1]) {\n      dataSource = sourceMatch[1].trim();\n    }\n    \n  } catch (error) {\n    return {\n      json: {\n        error: true,\n        message: `Lỗi khi xử lý dữ liệu: ${error.message}`\n      }\n    };\n  }\n}\n\n// Trả về kết quả\nreturn {\n  json: {\n    violations: result,\n    totalViolations: result.length,\n    licensePlate: result.length > 0 ? result[0].bienKiemSoat : '',\n    vehicleType: result.length > 0 ? result[0].loaiPhuongTien : '',\n    metadata: {\n      updateTime: updateTime,\n      dataSource: dataSource\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -272
+      ],
+      "id": "bebd3163-e03c-4229-a3db-aa00769b2f0f",
+      "name": "Code",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "loaixe",
+              "type": "any"
+            },
+            {
+              "name": "bienso",
+              "type": "any"
+            },
+            {
+              "name": "khuvuc",
+              "type": "any"
+            },
+            {
+              "name": "date",
+              "type": "any"
+            },
+            {
+              "name": "temdk",
+              "type": "any"
+            },
+            {
+              "name": "dateal",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "34bf4bb8-4d3f-477e-9265-364be6f48254",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -832,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Kiểm tra cấu trúc dữ liệu đầu vào\nlet htmlContent = \"\";\n\n// Kiểm tra xem items có tồn tại không\nif (!items || !Array.isArray(items) || items.length === 0) {\n  return {\n    json: {\n      error: true,\n      message: \"Dữ liệu đầu vào không hợp lệ hoặc rỗng\"\n    }\n  };\n}\n\n// Kiểm tra cấu trúc của items[0]\nconst inputData = items[0];\nif (typeof inputData === 'object') {\n  // Thử lấy dữ liệu từ các thuộc tính phổ biến\n  if (inputData.data) {\n    htmlContent = inputData.data;\n  } else if (inputData.json && inputData.json.data) {\n    htmlContent = inputData.json.data;\n  } else if (inputData.body) {\n    htmlContent = inputData.body;\n  } else if (inputData.content) {\n    htmlContent = inputData.content;\n  } else if (inputData.html) {\n    htmlContent = inputData.html;\n  }\n} else if (typeof inputData === 'string') {\n  htmlContent = inputData;\n}\n\n// Kiểm tra xem chúng ta đã có HTML chưa\nif (!htmlContent) {\n  return {\n    json: {\n      error: true,\n      message: \"Không thể tìm thấy dữ liệu HTML\"\n    }\n  };\n}\n\nconst result = {};\n\ntry {\n  // Trích xuất giải đặc biệt (G.ĐB)\n  const gdbMatch = htmlContent.match(/<td>G\\.ĐB<\\/td>\\s*<td[^>]*>\\s*<span[^>]*>([^<]+)<\\/span>/);\n  result.giai_db = gdbMatch ? gdbMatch[1].trim() : null;\n\n  // Trích xuất giải nhất (G.1)\n  const g1Match = htmlContent.match(/<td>G\\.1<\\/td>\\s*<td[^>]*>\\s*<span[^>]*>([^<]+)<\\/span>/);\n  result.giai_nhat = g1Match ? g1Match[1].trim() : null;\n\n  // Trích xuất giải nhì (G.2)\n  const g2Match = htmlContent.match(/<td>G\\.2<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>/);\n  if (g2Match) {\n    const g2Numbers = g2Match[1].match(/<span[^>]*>([^<]+)<\\/span>/g);\n    if (g2Numbers) {\n      result.giai_nhi = g2Numbers.map(span => span.replace(/<[^>]*>/g, '').trim()).join(' ');\n    }\n  }\n\n  // Trích xuất giải ba (G.3)\n  const g3Match = htmlContent.match(/<td>G\\.3<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>/);\n  if (g3Match) {\n    const g3Numbers = g3Match[1].match(/<span[^>]*>([^<]+)<\\/span>/g);\n    if (g3Numbers) {\n      result.giai_ba = g3Numbers.map(span => span.replace(/<[^>]*>/g, '').trim()).join(' ');\n    }\n  }\n\n  // Trích xuất giải tư (G.4)\n  const g4Match = htmlContent.match(/<td>G\\.4<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>/);\n  if (g4Match) {\n    const g4Numbers = g4Match[1].match(/<span[^>]*>([^<]+)<\\/span>/g);\n    if (g4Numbers) {\n      result.giai_tu = g4Numbers.map(span => span.replace(/<[^>]*>/g, '').trim()).join(' ');\n    }\n  }\n\n  // Trích xuất giải năm (G.5)\n  const g5Match = htmlContent.match(/<td>G\\.5<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>/);\n  if (g5Match) {\n    const g5Numbers = g5Match[1].match(/<span[^>]*>([^<]+)<\\/span>/g);\n    if (g5Numbers) {\n      result.giai_nam = g5Numbers.map(span => span.replace(/<[^>]*>/g, '').trim()).join(' ');\n    }\n  }\n\n  // Trích xuất giải sáu (G.6)\n  const g6Match = htmlContent.match(/<td>G\\.6<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>/);\n  if (g6Match) {\n    const g6Numbers = g6Match[1].match(/<span[^>]*>([^<]+)<\\/span>/g);\n    if (g6Numbers) {\n      result.giai_sau = g6Numbers.map(span => span.replace(/<[^>]*>/g, '').trim()).join(' ');\n    }\n  }\n\n  // Trích xuất giải bảy (G.7)\n  const g7Match = htmlContent.match(/<td>G\\.7<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>/);\n  if (g7Match) {\n    const g7Numbers = g7Match[1].match(/<span[^>]*>([^<]+)<\\/span>/g);\n    if (g7Numbers) {\n      result.giai_bay = g7Numbers.map(span => span.replace(/<[^>]*>/g, '').trim()).join(' ');\n    }\n  }\n\n  // Trích xuất bảng loto\n  const lotoMatch = htmlContent.match(/<span class=\"link-pad-left padding10\">Loto miền Bắc<\\/span>[\\s\\S]*?<table[^>]*>([\\s\\S]*?)<\\/table>/);\n  if (lotoMatch) {\n    const lotoRows = lotoMatch[1].match(/<tr>\\s*<td[^>]*>(\\d+)<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>\\s*<\\/tr>/g);\n    if (lotoRows) {\n      result.loto = {};\n      lotoRows.forEach(row => {\n        const match = row.match(/<tr>\\s*<td[^>]*>(\\d+)<\\/td>\\s*<td[^>]*>([\\s\\S]*?)<\\/td>\\s*<\\/tr>/);\n        if (match) {\n          const head = match[1];\n          const content = match[2].replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim();\n          result.loto[head] = content;\n        }\n      });\n    }\n  }\n\n} catch (error) {\n  return {\n    json: {\n      error: true,\n      message: `Lỗi khi xử lý dữ liệu: ${error.message}`\n    }\n  };\n}\n\n// Trả về kết quả\nreturn {\n  json: {\n    success: true,\n    data: result\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -144
+      ],
+      "id": "7f8b13b6-24b7-4078-81f0-c276605d8b38",
+      "name": "Code1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Start').item.json.khuvuc }}",
+                    "rightValue": "xsmb",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "afc68c52-279c-48f3-a8ec-f838b1299bc1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "xsmb"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "858fe1e9-7df3-40e6-b16b-3d59e8bbb9d0",
+                    "leftValue": "={{ $('Start').item.json.khuvuc }}",
+                    "rightValue": "xsmn",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "xsmn"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "188bde00-8f42-4570-9197-a683cd5d7782",
+                    "leftValue": "={{ $('Start').item.json.khuvuc }}",
+                    "rightValue": "xsmt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "xsmt"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "620ecf4e-545f-471c-9a0b-33db0a7d61ee",
+      "name": "Switch",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- CÁC HÀM HỖ TRỢ ---\n// Hàm để dọn dẹp văn bản lấy từ HTML (xóa thẻ HTML, khoảng trắng thừa)\nfunction cleanText(text) {\n    if (!text) return '';\n    return text.replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim();\n}\n\n// --- LOGIC CHÍNH ---\n\n// Lấy dữ liệu JSON từ item đầu tiên n8n đưa vào\nconst inputJson = items[0].json;\n\n// Lấy chuỗi HTML. Dữ liệu có thể là một object { \"data\": \"...\" }\n// hoặc một mảng chứa object đó [{ \"data\": \"...\" }]. Code này xử lý cả hai.\nlet html = '';\nif (Array.isArray(inputJson) && inputJson[0] && inputJson[0].data) {\n  // Trường hợp là mảng\n  html = inputJson[0].data;\n} else if (inputJson && inputJson.data) {\n  // Trường hợp là object\n  html = inputJson.data;\n}\n\n// Nếu không tìm thấy HTML thì báo lỗi\nif (!html) {\n  throw new Error(\"Không tìm thấy chuỗi HTML trong `items[0].json.data`. Vui lòng kiểm tra cấu trúc dữ liệu từ node phía trước.\");\n}\n\n\n// --- 1. TRÍCH XUẤT BẢNG KẾT QUẢ XỔ SỐ CHÍNH ---\n\nconst ketQuaXoSo = {};\n\n// Tìm bảng kết quả chính bằng regex\nconst prizeTableRegex = /<table class=\"table table-bordered table-striped table-xsmn livetn3\">([\\s\\S]*?)<\\/table>/;\nconst prizeTableMatch = html.match(prizeTableRegex);\n\nif (prizeTableMatch) {\n    const tableHtml = prizeTableMatch[1];\n\n    // Lấy tên các tỉnh từ thead\n    const theadRegex = /<thead>([\\s\\S]*?)<\\/thead>/;\n    const theadMatch = tableHtml.match(theadRegex);\n    const provinces = [];\n    if (theadMatch) {\n        const provinceHeaderRegex = /<th[^>]*>([\\s\\S]*?)<\\/th>/g;\n        let provinceMatch;\n        // Bỏ qua thẻ <th> đầu tiên (chữ \"Giải\")\n        provinceHeaderRegex.exec(theadMatch[1]); \n        while ((provinceMatch = provinceHeaderRegex.exec(theadMatch[1])) !== null) {\n            const provinceName = cleanText(provinceMatch[1]);\n            provinces.push(provinceName);\n            ketQuaXoSo[provinceName] = {};\n        }\n    }\n\n    // Lấy các giải thưởng từ tbody\n    const tbodyRegex = /<tbody>([\\s\\S]*?)<\\/tbody>/;\n    const tbodyMatch = tableHtml.match(tbodyRegex);\n    if (tbodyMatch) {\n        const rowRegex = /<tr>([\\s\\S]*?)<\\/tr>/g;\n        let rowMatch;\n        while ((rowMatch = rowRegex.exec(tbodyMatch[1])) !== null) {\n            const cellRegex = /<td[^>]*>([\\s\\S]*?)<\\/td>/g;\n            let cellMatch;\n            \n            // Ô đầu tiên là tên giải\n            cellMatch = cellRegex.exec(rowMatch[1]);\n            if (!cellMatch) continue;\n            const prizeName = cleanText(cellMatch[1]);\n\n            // Các ô tiếp theo là kết quả\n            let provinceIndex = 0;\n            while ((cellMatch = cellRegex.exec(rowMatch[1])) !== null) {\n                if (provinceIndex < provinces.length) {\n                    const provinceName = provinces[provinceIndex];\n                    const numbersRaw = cellMatch[1];\n                    const numberSpanRegex = /<span[^>]*>([\\s\\S]*?)<\\/span>/g;\n                    const numbers = [];\n                    let numberMatch;\n                    while((numberMatch = numberSpanRegex.exec(numbersRaw)) !== null) {\n                        numbers.push(...cleanText(numberMatch[1]).split(' '));\n                    }\n                    \n                    ketQuaXoSo[provinceName][prizeName] = numbers.filter(n => n); // Lọc bỏ chuỗi rỗng\n                    provinceIndex++;\n                }\n            }\n        }\n    }\n}\n\n// --- 2. TRÍCH XUẤT CÁC BẢNG LOTO ---\nconst loto = {};\nconst lotoContainerRegex = /<div class=\"block-main-content view-loto\">([\\s\\S]*?)<\\/div>/;\nconst lotoContainerMatch = html.match(lotoContainerRegex);\n\nif (lotoContainerMatch) {\n    // Tách mỗi bảng loto thành một phần riêng\n    const lotoTablesHtml = lotoContainerMatch[1].split('<p class=\"padding10\">').slice(1);\n    \n    for (const tableHtml of lotoTablesHtml) {\n        // Lấy tên tỉnh từ tiêu đề\n        const titleMatch = tableHtml.match(/Loto (.*?) Thứ/);\n        if (titleMatch && titleMatch[1]) {\n            const provinceName = titleMatch[1].trim();\n            loto[provinceName] = {};\n            \n            // Lấy các hàng của bảng loto\n            const lotoRowRegex = /<td class=\"text-center\">(\\d+|-)<\\/td>\\s*<td.*?>([\\s\\S]*?)<\\/td>/g;\n            let rowMatch;\n            while ((rowMatch = lotoRowRegex.exec(tableHtml)) !== null) {\n                const head = rowMatch[1]; // Đầu số (0, 1, 2... hoặc -)\n                if (head === '-') continue;\n\n                const numbersRaw = cleanText(rowMatch[2]); // Dãy số loto\n                \n                const numbers = numbersRaw === '-' ? [] : numbersRaw.replace(/,\\s*$/,'').split(/, | |,/g).filter(n => n);\n                loto[provinceName][head] = numbers;\n            }\n        }\n    }\n}\n\n// --- KẾT QUẢ CUỐI CÙNG ---\nreturn [{\n    json: {\n        ketQuaXoSo,\n        loto\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        0
+      ],
+      "id": "8761fed4-4b90-4ef8-8443-1040cfeaa64d",
+      "name": "Code2",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- CÁC HÀM HỖ TRỢ ---\n// Hàm để dọn dẹp văn bản lấy từ HTML (xóa thẻ HTML, khoảng trắng thừa)\nfunction cleanText(text) {\n    if (!text) return '';\n    return text.replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim();\n}\n\n// --- LOGIC CHÍNH ---\n\n// Lấy dữ liệu JSON từ item đầu tiên n8n đưa vào\nconst inputJson = items[0].json;\n\n// Lấy chuỗi HTML. Dữ liệu có thể là một object { \"data\": \"...\" }\n// hoặc một mảng chứa object đó [{ \"data\": \"...\" }]. Code này xử lý cả hai.\nlet html = '';\nif (Array.isArray(inputJson) && inputJson[0] && inputJson[0].data) {\n  // Trường hợp là mảng\n  html = inputJson[0].data;\n} else if (inputJson && inputJson.data) {\n  // Trường hợp là object\n  html = inputJson.data;\n}\n\n// Nếu không tìm thấy HTML thì báo lỗi\nif (!html) {\n  throw new Error(\"Không tìm thấy chuỗi HTML trong `items[0].json.data`. Vui lòng kiểm tra cấu trúc dữ liệu từ node phía trước.\");\n}\n\n\n// --- 1. TRÍCH XUẤT BẢNG KẾT QUẢ XỔ SỐ CHÍNH ---\n\nconst ketQuaXoSo = {};\n\n// Tìm bảng kết quả chính bằng regex\nconst prizeTableRegex = /<table class=\"table table-bordered table-striped table-xsmn livetn3\">([\\s\\S]*?)<\\/table>/;\nconst prizeTableMatch = html.match(prizeTableRegex);\n\nif (prizeTableMatch) {\n    const tableHtml = prizeTableMatch[1];\n\n    // Lấy tên các tỉnh từ thead\n    const theadRegex = /<thead>([\\s\\S]*?)<\\/thead>/;\n    const theadMatch = tableHtml.match(theadRegex);\n    const provinces = [];\n    if (theadMatch) {\n        const provinceHeaderRegex = /<th[^>]*>([\\s\\S]*?)<\\/th>/g;\n        let provinceMatch;\n        // Bỏ qua thẻ <th> đầu tiên (chữ \"Giải\")\n        provinceHeaderRegex.exec(theadMatch[1]); \n        while ((provinceMatch = provinceHeaderRegex.exec(theadMatch[1])) !== null) {\n            const provinceName = cleanText(provinceMatch[1]);\n            provinces.push(provinceName);\n            ketQuaXoSo[provinceName] = {};\n        }\n    }\n\n    // Lấy các giải thưởng từ tbody\n    const tbodyRegex = /<tbody>([\\s\\S]*?)<\\/tbody>/;\n    const tbodyMatch = tableHtml.match(tbodyRegex);\n    if (tbodyMatch) {\n        const rowRegex = /<tr>([\\s\\S]*?)<\\/tr>/g;\n        let rowMatch;\n        while ((rowMatch = rowRegex.exec(tbodyMatch[1])) !== null) {\n            const cellRegex = /<td[^>]*>([\\s\\S]*?)<\\/td>/g;\n            let cellMatch;\n            \n            // Ô đầu tiên là tên giải\n            cellMatch = cellRegex.exec(rowMatch[1]);\n            if (!cellMatch) continue;\n            const prizeName = cleanText(cellMatch[1]);\n\n            // Các ô tiếp theo là kết quả\n            let provinceIndex = 0;\n            while ((cellMatch = cellRegex.exec(rowMatch[1])) !== null) {\n                if (provinceIndex < provinces.length) {\n                    const provinceName = provinces[provinceIndex];\n                    const numbersRaw = cellMatch[1];\n                    const numberSpanRegex = /<span[^>]*>([\\s\\S]*?)<\\/span>/g;\n                    const numbers = [];\n                    let numberMatch;\n                    while((numberMatch = numberSpanRegex.exec(numbersRaw)) !== null) {\n                        numbers.push(...cleanText(numberMatch[1]).split(' '));\n                    }\n                    \n                    ketQuaXoSo[provinceName][prizeName] = numbers.filter(n => n); // Lọc bỏ chuỗi rỗng\n                    provinceIndex++;\n                }\n            }\n        }\n    }\n}\n\n// --- 2. TRÍCH XUẤT CÁC BẢNG LOTO ---\nconst loto = {};\nconst lotoContainerRegex = /<div class=\"block-main-content view-loto\">([\\s\\S]*?)<\\/div>/;\nconst lotoContainerMatch = html.match(lotoContainerRegex);\n\nif (lotoContainerMatch) {\n    // Tách mỗi bảng loto thành một phần riêng\n    const lotoTablesHtml = lotoContainerMatch[1].split('<p class=\"padding10\">').slice(1);\n    \n    for (const tableHtml of lotoTablesHtml) {\n        // Lấy tên tỉnh từ tiêu đề\n        const titleMatch = tableHtml.match(/Loto (.*?) Thứ/);\n        if (titleMatch && titleMatch[1]) {\n            const provinceName = titleMatch[1].trim();\n            loto[provinceName] = {};\n            \n            // Lấy các hàng của bảng loto\n            const lotoRowRegex = /<td class=\"text-center\">(\\d+|-)<\\/td>\\s*<td.*?>([\\s\\S]*?)<\\/td>/g;\n            let rowMatch;\n            while ((rowMatch = lotoRowRegex.exec(tableHtml)) !== null) {\n                const head = rowMatch[1]; // Đầu số (0, 1, 2... hoặc -)\n                if (head === '-') continue;\n\n                const numbersRaw = cleanText(rowMatch[2]); // Dãy số loto\n                \n                const numbers = numbersRaw === '-' ? [] : numbersRaw.replace(/,\\s*$/,'').split(/, | |,/g).filter(n => n);\n                loto[provinceName][head] = numbers;\n            }\n        }\n    }\n}\n\n// --- KẾT QUẢ CUỐI CÙNG ---\nreturn [{\n    json: {\n        ketQuaXoSo,\n        loto\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        160
+      ],
+      "id": "b17fce74-41e5-467b-a5ca-30ef44a1e9ec",
+      "name": "Code3",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.phatnguoi.vn/web/tra-cuu/{{ $json.bienso }}/{{ $json.loaixe }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+            },
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Origin",
+              "value": "https://phatnguoi.vn"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Referer",
+              "value": "https://phatnguoi.vn/"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "empty"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "cors"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "same-site"
+            }
+          ]
+        },
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        -272
+      ],
+      "id": "8f4d1eb9-fce6-4a72-8692-0db1323682e0",
+      "name": "phat-nguoi",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://xosodaiphat.com/{{ $json.khuvuc }}-{{ $json.date }}.html ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Alt-Used",
+              "value": "xosodaiphat.com"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Upgrade-Insecure-Requests",
+              "value": "1"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "document"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "navigate"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "same-origin"
+            },
+            {
+              "name": "Sec-Fetch-User",
+              "value": "?1"
+            },
+            {
+              "name": "Priority",
+              "value": "u=0, i"
+            },
+            {
+              "name": "TE",
+              "value": "trailers"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "3bff4eae-14f7-468e-a1ae-67d7b7ec579c",
+      "name": "xo-so",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy dữ liệu HTML từ phản hồi\nconst response = items[0].json;\nlet html = \"\";\n\n// Kiểm tra cấu trúc dữ liệu đầu vào\nif (response && response.data) {\n  html = response.data;\n} else if (response.body) {\n  html = response.body;\n} else if (typeof response === 'string') {\n  html = response;\n}\n\n// Kiểm tra xem có dữ liệu HTML không\nif (!html) {\n  return {\n    json: {\n      success: false,\n      message: \"Không tìm thấy dữ liệu HTML trong phản hồi\"\n    }\n  };\n}\n\n// Kiểm tra xem có phải là trang lỗi không\nif (html.includes(\"Sai mã xác nhận!\")) {\n  return {\n    json: {\n      success: false,\n      message: \"Sai mã xác nhận CAPTCHA\",\n      error: \"CAPTCHA_ERROR\"\n    }\n  };\n}\n\n// Hàm trích xuất giá trị từ span theo ID\nfunction extractSpanValue(html, spanId) {\n  const regex = new RegExp(`<span id=\"${spanId}\"[^>]*>([^<]+)<\\\\/span>`, 'i');\n  const match = html.match(regex);\n  return match ? match[1].trim() : \"\";\n}\n\n// Trích xuất thông tin từ HTML\nconst thongTinXe = {\n  // Thông tin chung\n  bienDangKy: extractSpanValue(html, \"LblBinDangKy\").replace(\"THÔNG TIN PHƯƠNG TIỆN BIỂN ĐĂNG KÝ:\", \"\").trim(),\n  nhanHieu: extractSpanValue(html, \"txtNhanHieu\"),\n  loaiPhuongTien: extractSpanValue(html, \"txtLoaiPT\"),\n  soKhung: extractSpanValue(html, \"txtSoKhung\"),\n  soMay: extractSpanValue(html, \"txtSoMay\"),\n  \n  // Thông số kỹ thuật\n  kichThuocBao: extractSpanValue(html, \"txtKichThuocBao\"),\n  kichThuocThungHang: extractSpanValue(html, \"txtKichThuocThung\"),\n  khoiLuongBanThan: extractSpanValue(html, \"txtTuTrongTK\"),\n  khoiLuongHangHoaChoPhep: extractSpanValue(html, \"txtTaiTrongGT\"),\n  soNguoiChoPhepCho: extractSpanValue(html, \"txtSoCho\"),\n  khoiLuongToanBo: extractSpanValue(html, \"txtTrLgToanBoGT\"),\n  soTrucChieuDaiCoSo: extractSpanValue(html, \"txtCdCsCtBx\"),\n  khoiLuongKeoTheo: extractSpanValue(html, \"txtTrLgMoocCP\"),\n  \n  // Kiểm định gần nhất\n  kiemDinh: {\n    ngayKiemDinh: extractSpanValue(html, \"txtNgayKD\"),\n    donViKiemDinh: extractSpanValue(html, \"txtTramKD\"),\n    soTemGCN: extractSpanValue(html, \"txtSoTemGCN\"),\n    hanHieuLuc: extractSpanValue(html, \"txtHanKDToi\")\n  },\n  \n  // Phí sử dụng đường bộ\n  phiDuongBo: {\n    ngayNopPhi: extractSpanValue(html, \"txtNgayNop\"),\n    donViThuPhi: extractSpanValue(html, \"txtDonVi\"),\n    soBienLai: extractSpanValue(html, \"txtBL_ID\"),\n    phiNopDenNgay: extractSpanValue(html, \"txtDenNgay\")\n  }\n};\n\n// Kiểm tra xem có dữ liệu xe không\nconst hasVehicleData = thongTinXe.bienDangKy && thongTinXe.nhanHieu;\n\n// Tính toán tình trạng kiểm định và phí đường bộ\nconst today = new Date();\nconst formatDate = (dateStr) => {\n  const [day, month, year] = dateStr.split('/');\n  return new Date(`${year}-${month}-${day}`);\n};\n\n// Tính ngày còn lại của kiểm định và phí đường bộ\nlet kiemDinhStatus = \"Không có thông tin\";\nlet phiDuongBoStatus = \"Không có thông tin\";\n\nif (thongTinXe.kiemDinh.hanHieuLuc) {\n  const expDate = formatDate(thongTinXe.kiemDinh.hanHieuLuc);\n  const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));\n  \n  if (daysLeft > 30) {\n    kiemDinhStatus = `Còn hạn (${daysLeft} ngày)`;\n  } else if (daysLeft > 0) {\n    kiemDinhStatus = `Sắp hết hạn (${daysLeft} ngày)`;\n  } else {\n    kiemDinhStatus = `Đã hết hạn (${Math.abs(daysLeft)} ngày)`;\n  }\n}\n\nif (thongTinXe.phiDuongBo.phiNopDenNgay) {\n  const expDate = formatDate(thongTinXe.phiDuongBo.phiNopDenNgay);\n  const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));\n  \n  if (daysLeft > 30) {\n    phiDuongBoStatus = `Còn hạn (${daysLeft} ngày)`;\n  } else if (daysLeft > 0) {\n    phiDuongBoStatus = `Sắp hết hạn (${daysLeft} ngày)`;\n  } else {\n    phiDuongBoStatus = `Đã hết hạn (${Math.abs(daysLeft)} ngày)`;\n  }\n}\n\n// Trả về kết quả\nreturn {\n  json: {\n    success: hasVehicleData,\n    message: hasVehicleData ? \"Tìm thấy thông tin phương tiện\" : \"Không tìm thấy thông tin phương tiện\",\n    data: thongTinXe,\n    status: {\n      kiemDinh: kiemDinhStatus,\n      phiDuongBo: phiDuongBoStatus\n    },\n    raw: hasVehicleData ? undefined : html // Chỉ trả về HTML gốc nếu không tìm thấy thông tin xe\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        544
+      ],
+      "id": "e2108137-7d94-4206-ae7e-37e854c8e3c6",
+      "name": "Code5",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.loaixe }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "notEquals"
+                    },
+                    "id": "b796e213-5e79-4c03-9399-278e970a9971"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "phatnguoi"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a8441e0b-ad4c-4581-9279-49eb5e6ed2f4",
+                    "leftValue": "={{ $json.khuvuc }}",
+                    "rightValue": "0",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "xoso"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2fa3822e-2570-4db0-9533-32e1175b8648",
+                    "leftValue": "={{ $json.temdk }}",
+                    "rightValue": "0",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "dangkiem"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "463ecdcb-9047-410c-a334-4c51d6d4b48b",
+                    "leftValue": "={{ $json.dateal }}",
+                    "rightValue": "0",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "amlich"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -528,
+        -16
+      ],
+      "id": "2ffe71d1-5057-4588-ae12-0b81b884402f",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.captchaUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0"
+            },
+            {
+              "name": "Accept",
+              "value": "image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Referer",
+              "value": "http://app.vr.org.vn/ptpublic/thongtinptpublic.aspx"
+            },
+            {
+              "name": "Priority",
+              "value": "u=4, i"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        304,
+        320
+      ],
+      "id": "b766defd-54ef-402a-b3b0-289bdd290458",
+      "name": "Get File Captcha",
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "This is a captcha code, decode it and return only the result, note that the code distinguishes between uppercase, lowercase, and numbers.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        496,
+        320
+      ],
+      "id": "b1576a7b-acfb-4d4b-b360-dfe42f58f596",
+      "name": "Text Captcha",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "riBIC85xJlHV0SPb",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://app.vr.org.vn/ptpublic/thongtinptpublic.aspx",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate"
+            },
+            {
+              "name": "Origin",
+              "value": "http://app.vr.org.vn"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Referer",
+              "value": "http://app.vr.org.vn/ptpublic/thongtinptpublic.aspx"
+            },
+            {
+              "name": "Upgrade-Insecure-Requests",
+              "value": "1"
+            },
+            {
+              "name": "Priority",
+              "value": "u=0, i"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $('Find URL Captcha').item.json.headers['set-cookie'][0] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "__VIEWSTATE",
+              "value": "={{ $('Find Get Headers').item.json.viewstate }}"
+            },
+            {
+              "name": "__VIEWSTATEGENERATOR",
+              "value": "={{ $('Find Get Headers').item.json.viewstategenerator }}"
+            },
+            {
+              "name": "__EVENTVALIDATION",
+              "value": "={{ $('Find Get Headers').item.json.eventvalidation }}"
+            },
+            {
+              "name": "txtBienDK",
+              "value": "={{ $('Start').item.json.bienso }}"
+            },
+            {
+              "name": "TxtSoTem",
+              "value": "={{ $('Start').item.json.temdk }}"
+            },
+            {
+              "name": "txtCaptcha",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "CmdTraCuu",
+              "value": "Tra+cứu"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        544
+      ],
+      "id": "e114c80a-a2e4-4d5c-8762-801d68513a13",
+      "name": "POST Payload",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy dữ liệu HTML từ phản hồi\nconst response = items[0].json;\nlet html = \"\";\n\n// Kiểm tra cấu trúc dữ liệu đầu vào\nif (response && response.data) {\n  html = response.data;\n} else if (typeof response === 'string') {\n  html = response;\n}\n\n// Kiểm tra xem có dữ liệu HTML không\nif (!html) {\n  return {\n    json: {\n      success: false,\n      message: \"Không tìm thấy dữ liệu HTML trong phản hồi\"\n    }\n  };\n}\n\n// Hàm giải mã HTML entities thành ký tự Unicode\nfunction decodeHTMLEntities(text) {\n  if (!text) return '';\n  \n  // Tạo một phần tử div tạm thời để sử dụng tính năng giải mã HTML của trình duyệt\n  const tempElement = document.createElement('div');\n  tempElement.innerHTML = text;\n  \n  // Lấy nội dung văn bản đã được giải mã\n  const decoded = tempElement.textContent || tempElement.innerText;\n  \n  return decoded;\n}\n\n// Trong Node.js, không có document, nên chúng ta cần một cách tiếp cận khác\nfunction decodeHTMLEntitiesNode(text) {\n  if (!text) return '';\n  \n  // Bảng ánh xạ các HTML entities phổ biến trong tiếng Việt\n  const vietnameseEntities = {\n    '&#225;': 'á', '&#224;': 'à', '&#7843;': 'ả', '&#227;': 'ã', '&#7841;': 'ạ',\n    '&#226;': 'â', '&#7845;': 'ấ', '&#7847;': 'ầ', '&#7849;': 'ẩ', '&#7851;': 'ẫ', '&#7853;': 'ậ',\n    '&#259;': 'ă', '&#7855;': 'ắ', '&#7857;': 'ằ', '&#7859;': 'ẳ', '&#7861;': 'ẵ', '&#7863;': 'ặ',\n    '&#233;': 'é', '&#232;': 'è', '&#7867;': 'ẻ', '&#7869;': 'ẽ', '&#7865;': 'ẹ',\n    '&#234;': 'ê', '&#7871;': 'ế', '&#7873;': 'ề', '&#7875;': 'ể', '&#7877;': 'ễ', '&#7879;': 'ệ',\n    '&#237;': 'í', '&#236;': 'ì', '&#7881;': 'ỉ', '&#297;': 'ĩ', '&#7883;': 'ị',\n    '&#243;': 'ó', '&#242;': 'ò', '&#7887;': 'ỏ', '&#245;': 'õ', '&#7885;': 'ọ',\n    '&#244;': 'ô', '&#7889;': 'ố', '&#7891;': 'ồ', '&#7893;': 'ổ', '&#7895;': 'ỗ', '&#7897;': 'ộ',\n    '&#417;': 'ơ', '&#7899;': 'ớ', '&#7901;': 'ờ', '&#7903;': 'ở', '&#7905;': 'ỡ', '&#7907;': 'ợ',\n    '&#250;': 'ú', '&#249;': 'ù', '&#7911;': 'ủ', '&#361;': 'ũ', '&#7909;': 'ụ',\n    '&#432;': 'ư', '&#7913;': 'ứ', '&#7915;': 'ừ', '&#7917;': 'ử', '&#7919;': 'ữ', '&#7921;': 'ự',\n    '&#253;': 'ý', '&#7923;': 'ỳ', '&#7927;': 'ỷ', '&#7929;': 'ỹ', '&#7925;': 'ỵ',\n    '&#273;': 'đ',\n    '&#193;': 'Á', '&#192;': 'À', '&#7842;': 'Ả', '&#195;': 'Ã', '&#7840;': 'Ạ',\n    '&#194;': 'Â', '&#7844;': 'Ấ', '&#7846;': 'Ầ', '&#7848;': 'Ẩ', '&#7850;': 'Ẫ', '&#7852;': 'Ậ',\n    '&#258;': 'Ă', '&#7854;': 'Ắ', '&#7856;': 'Ằ', '&#7858;': 'Ẳ', '&#7860;': 'Ẵ', '&#7862;': 'Ặ',\n    '&#201;': 'É', '&#200;': 'È', '&#7866;': 'Ẻ', '&#7868;': 'Ẽ', '&#7864;': 'Ẹ',\n    '&#202;': 'Ê', '&#7870;': 'Ế', '&#7872;': 'Ề', '&#7874;': 'Ể', '&#7876;': 'Ễ', '&#7878;': 'Ệ',\n    '&#205;': 'Í', '&#204;': 'Ì', '&#7880;': 'Ỉ', '&#296;': 'Ĩ', '&#7882;': 'Ị',\n    '&#211;': 'Ó', '&#210;': 'Ò', '&#7886;': 'Ỏ', '&#213;': 'Õ', '&#7884;': 'Ọ',\n    '&#212;': 'Ô', '&#7888;': 'Ố', '&#7890;': 'Ồ', '&#7892;': 'Ổ', '&#7894;': 'Ỗ', '&#7896;': 'Ộ',\n    '&#416;': 'Ơ', '&#7898;': 'Ớ', '&#7900;': 'Ờ', '&#7902;': 'Ở', '&#7904;': 'Ỡ', '&#7906;': 'Ợ',\n    '&#218;': 'Ú', '&#217;': 'Ù', '&#7910;': 'Ủ', '&#360;': 'Ũ', '&#7908;': 'Ụ',\n    '&#431;': 'Ư', '&#7912;': 'Ứ', '&#7914;': 'Ừ', '&#7916;': 'Ử', '&#7918;': 'Ữ', '&#7920;': 'Ự',\n    '&#221;': 'Ý', '&#7922;': 'Ỳ', '&#7926;': 'Ỷ', '&#7928;': 'Ỹ', '&#7924;': 'Ỵ',\n    '&#272;': 'Đ'\n  };\n  \n  // Thay thế các HTML entities bằng ký tự Unicode tương ứng\n  return text.replace(/&#\\d+;/g, function(match) {\n    return vietnameseEntities[match] || match;\n  });\n}\n\n// Trích xuất thông tin lịch âm dương\nconst lichAmDuong = {};\n\n// Trích xuất ngày dương lịch\nconst ngayDuongMatch = html.match(/<p class=\"text-num text-solar fw-bold mar-t-10 mar-b-10\">(\\d+)<\\/p>/);\nlichAmDuong.ngayDuong = ngayDuongMatch ? ngayDuongMatch[1] : \"\";\n\n// Trích xuất tháng và năm dương lịch\nconst thangNamDuongMatch = html.match(/<p class=\"text-year mar-b-5\">Tháng (\\d+) năm (\\d+)<\\/p>/);\nif (thangNamDuongMatch) {\n  lichAmDuong.thangDuong = thangNamDuongMatch[1];\n  lichAmDuong.namDuong = thangNamDuongMatch[2];\n}\n\n// Trích xuất ngày âm lịch\nconst ngayAmMatch = html.match(/<p class=\"text-num text-lunar fw-bold mar-t-10 mar-b-10\">(\\d+)<\\/p>/);\nlichAmDuong.ngayAm = ngayAmMatch ? ngayAmMatch[1] : \"\";\n\n// Trích xuất tháng và năm âm lịch\nconst thangNamAmMatch = html.match(/<p class=\"text-year mar-b-5\">Tháng (\\d+) năm ([^<]+)<\\/p>/g);\nif (thangNamAmMatch && thangNamAmMatch.length >= 2) {\n  // Lấy chuỗi thứ hai (âm lịch)\n  const amLichStr = thangNamAmMatch[1];\n  const amLichMatch = amLichStr.match(/Tháng (\\d+) năm ([^<]+)/);\n  if (amLichMatch) {\n    lichAmDuong.thangAm = amLichMatch[1];\n    lichAmDuong.namAm = amLichMatch[2].trim();\n  }\n}\n\n// Trích xuất can chi ngày và tháng\nconst canChiMatch = html.match(/<p class=\"text-special color-red\">Ngày ([^-]+) - Tháng ([^<]+)<\\/p>/);\nif (canChiMatch) {\n  lichAmDuong.ngayCanChi = decodeHTMLEntitiesNode(canChiMatch[1].trim());\n  lichAmDuong.thangCanChi = decodeHTMLEntitiesNode(canChiMatch[2].trim());\n}\n\n// Trích xuất mệnh ngày\nconst menhNgayMatch = html.match(/<strong>Mệnh ngày:<\\/strong>([^<]+)<\\/p>/);\nlichAmDuong.menhNgay = menhNgayMatch ? menhNgayMatch[1].trim() : \"\";\n\n// Trích xuất giờ hoàng đạo\nconst gioHoangDaoMatch = html.match(/<strong>Giờ hoàng đạo:<\\/strong>([^<]+)<\\/p>/);\nconst gioHoangDaoText = gioHoangDaoMatch ? gioHoangDaoMatch[1].trim() : \"\";\n\n// Trích xuất tuổi xung\nconst tuoiXungMatch = html.match(/<strong>Tuổi xung:<\\/strong>([^<]+)<\\/p>/);\nlichAmDuong.tuoiXung = tuoiXungMatch ? tuoiXungMatch[1].trim() : \"\";\n\n// Tạo các thông tin bổ sung\nlichAmDuong.ngayDuongLich = `${lichAmDuong.ngayDuong}/${lichAmDuong.thangDuong}/${lichAmDuong.namDuong}`;\nlichAmDuong.ngayAmLich = `${lichAmDuong.ngayAm}/${lichAmDuong.thangAm}/${lichAmDuong.namAm}`;\n\n// Trích xuất ngày trước và sau\nconst ngayTruocMatch = html.match(/loadLichVansu\\('([^']+)'\\)/);\nlichAmDuong.ngayTruoc = ngayTruocMatch ? ngayTruocMatch[1] : \"\";\n\nconst ngaySauMatch = html.match(/btn-lvn-today-next\" href=\"javascript:void\\(0\\);\" onclick=\"javascript:loadLichVansu\\('([^']+)'\\)\">/);\nlichAmDuong.ngaySau = ngaySauMatch ? ngaySauMatch[1] : \"\";\n\n// Trích xuất ngày hiện tại từ input hidden\nconst ngayChonMatch = html.match(/<input type=\"hidden\" id=\"dayChose\" value=\"([^\"]+)\">/);\nlichAmDuong.ngayChon = ngayChonMatch ? ngayChonMatch[1] : \"\";\n\n// Định dạng lại các giờ hoàng đạo thành mảng\nconst gioHoangDaoArray = [];\n\n// Xử lý đặc biệt cho giờ hoàng đạo để lấy đúng tên giờ\nif (gioHoangDaoText) {\n  // Tìm tất cả các giờ trong chuỗi\n  // Trong văn bản HTML, có thể thấy các giờ như: Tý (23h-1h), Sửu (1h-3h), Mão (5h-7h), v.v.\n  const gioMatches = gioHoangDaoText.match(/([^,(]+)\\s*\\(([^)]+)\\)/g);\n  \n  if (gioMatches) {\n    gioMatches.forEach(gioStr => {\n      const parts = gioStr.match(/([^,(]+)\\s*\\(([^)]+)\\)/);\n      if (parts && parts.length >= 3) {\n        // Tên giờ có thể có các ký tự đặc biệt như \"Tý\", \"Sửu\", v.v.\n        const ten = decodeHTMLEntitiesNode(parts[1].trim());\n        const thoiGian = parts[2].trim();\n        \n        gioHoangDaoArray.push({\n          ten: ten,\n          thoiGian: thoiGian\n        });\n      }\n    });\n  }\n}\n\n// Định dạng lại các tuổi xung thành mảng\nconst tuoiXungArray = lichAmDuong.tuoiXung ? lichAmDuong.tuoiXung.split(',').map(tuoi => decodeHTMLEntitiesNode(tuoi.trim())) : [];\n\n// Trả về kết quả\nreturn {\n  json: {\n    success: true,\n    data: {\n      duongLich: {\n        ngay: lichAmDuong.ngayDuong,\n        thang: lichAmDuong.thangDuong,\n        nam: lichAmDuong.namDuong,\n        ngayThangNam: lichAmDuong.ngayDuongLich\n      },\n      amLich: {\n        ngay: lichAmDuong.ngayAm,\n        thang: lichAmDuong.thangAm,\n        nam: lichAmDuong.namAm,\n        ngayThangNam: lichAmDuong.ngayAmLich,\n        ngayCanChi: lichAmDuong.ngayCanChi,\n        thangCanChi: lichAmDuong.thangCanChi\n      },\n      thongTinKhac: {\n        menhNgay: lichAmDuong.menhNgay,\n        gioHoangDao: gioHoangDaoArray,\n        tuoiXung: tuoiXungArray\n      },\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        800
+      ],
+      "id": "db0e07c3-df66-4eba-b7f1-c695bd2b3a34",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "url": "http://app.vr.org.vn/ptpublic/thongtinptpublic.aspx",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Upgrade-Insecure-Requests",
+              "value": "1"
+            },
+            {
+              "name": "Priority",
+              "value": "u=0, i"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        320
+      ],
+      "id": "9a6656bc-3a48-4026-8f7a-502460c1de30",
+      "name": "Find URL Captcha",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "maxTries": 5,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy toàn bộ phản hồi từ node trước (bao gồm data và headers)\nconst response = items[0].json;\nconst html = response.data;\nconst headers = response.headers;\n\n// Kiểm tra dữ liệu đầu vào\nif (!html) {\n  throw new Error(\"Không nhận được HTML từ node HTTP Request.\");\n}\nif (!headers || !headers['set-cookie']) {\n  throw new Error(\"Không tìm thấy header 'set-cookie' trong phản hồi. Hãy đảm bảo node HTTP Request đã bật 'Include Response Headers'.\");\n}\n\n// --- 1. TRÍCH XUẤT URL CAPTCHA ---\nconst captchaRegex = /<img id=\"captchaImage\"[^>]*?src=\"([^\"]+)\"/i;\nconst match = html.match(captchaRegex);\nif (!match || !match[1]) {\n  throw new Error(\"Không thể tìm thấy URL của ảnh captcha trong HTML.\");\n}\nconst relativeUrl = match[1];\nconst fullCaptchaUrl = 'http://app.vr.org.vn/ptpublic/' + relativeUrl;\n\n// --- 2. TRÍCH XUẤT CHÍNH XÁC GIÁ TRỊ COOKIE ---\n// Header 'set-cookie' là một mảng, ta lấy phần tử đầu tiên\nconst cookieHeader = headers['set-cookie'][0];\n// Chuỗi cookie có dạng \"ASP.NET_SessionId=value; path=/; ...\",\nconst fullCookieString = cookieHeader.split(';')[0]; \n\nif (!fullCookieString || !fullCookieString.startsWith('ASP.NET_SessionId')) {\n    throw new Error(\"Không thể trích xuất ASP.NET_SessionId từ cookie: \" + cookieHeader);\n}\n\n// Tách chuỗi bằng dấu '=' và lấy phần tử thứ hai (chính là giá trị session)\nconst cookieParts = fullCookieString.split('=');\nconst sessionId = cookieParts.length > 1 ? cookieParts[1] : null;\n\nif (!sessionId) {\n    throw new Error(\"Không thể trích xuất giá trị từ chuỗi cookie: \" + fullCookieString);\n}\n\n// --- 3. TRÍCH XUẤT __VIEWSTATE ---\nconst viewstateRegex = /<input type=\"hidden\" name=\"__VIEWSTATE\" id=\"__VIEWSTATE\" value=\"([^\"]+)\"/i;\nconst viewstateMatch = html.match(viewstateRegex);\nif (!viewstateMatch || !viewstateMatch[1]) {\n  throw new Error(\"Không thể tìm thấy __VIEWSTATE trong HTML.\");\n}\nconst viewstate = viewstateMatch[1];\n\n// --- 4. TRÍCH XUẤT __VIEWSTATEGENERATOR ---\nconst viewstategenRegex = /<input type=\"hidden\" name=\"__VIEWSTATEGENERATOR\" id=\"__VIEWSTATEGENERATOR\" value=\"([^\"]+)\"/i;\nconst viewstategenMatch = html.match(viewstategenRegex);\nif (!viewstategenMatch || !viewstategenMatch[1]) {\n  throw new Error(\"Không thể tìm thấy __VIEWSTATEGENERATOR trong HTML.\");\n}\nconst viewstategenerator = viewstategenMatch[1];\n\n// --- 5. TRÍCH XUẤT __EVENTVALIDATION ---\nconst eventvalidationRegex = /<input type=\"hidden\" name=\"__EVENTVALIDATION\" id=\"__EVENTVALIDATION\" value=\"([^\"]+)\"/i;\nconst eventvalidationMatch = html.match(eventvalidationRegex);\nif (!eventvalidationMatch || !eventvalidationMatch[1]) {\n  throw new Error(\"Không thể tìm thấy __EVENTVALIDATION trong HTML.\");\n}\nconst eventvalidation = eventvalidationMatch[1];\n\n// --- KẾT QUẢ ---\n// Trả về URL captcha, session ID và các tham số form\nreturn [{\n  json: {\n    captchaUrl: fullCaptchaUrl,\n    sessionId: sessionId,\n    viewstate: viewstate,\n    viewstategenerator: viewstategenerator,\n    eventvalidation: eventvalidation,\n    cookieHeader: `ASP.NET_SessionId=${sessionId}`  // Cookie header đầy đủ để sử dụng trong request tiếp theo\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        320
+      ],
+      "id": "9f113da5-81a5-49f4-87a5-783c2a0ce6c2",
+      "name": "Find Get Headers",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "889790c7-7628-41af-808f-171c1df58ce3",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "CAPTCHA_ERROR",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "c483dd3b-cb0d-4281-9c81-bab490fb4295",
+              "leftValue": "={{ $json.error.status }}",
+              "rightValue": 500,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "3b429215-82b0-439f-a946-412149aa8625",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Không tìm thấy dữ liệu HTML trong phản hồi",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        544
+      ],
+      "id": "a3d679bb-ddb6-4983-b180-ffaf026ea0ac",
+      "name": "If Erro",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d4301437-5b14-4ceb-928b-4a1f948535c6",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        496,
+        560
+      ],
+      "id": "7195ab7c-02dd-4265-a36f-731dbfaecf8f",
+      "name": "Retry Max 5",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://24h.24hstatic.com/ajax/box_lich_van_nien_chi_tiet/index/{{ $json.dateal }}/pc/0/0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0"
+            },
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br, zstd"
+            },
+            {
+              "name": "Origin",
+              "value": "https://www.24h.com.vn"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.24h.com.vn/"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "empty"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "cors"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "cross-site"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        800
+      ],
+      "id": "b7f45b93-3b52-44b5-9091-22426bc51c6d",
+      "name": "Am Lich"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "phat-nguoi": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "xo-so": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        []
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "If Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "phat-nguoi",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "xo-so",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find URL Captcha",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Am Lich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File Captcha": {
+      "main": [
+        [
+          {
+            "node": "Text Captcha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Captcha": {
+      "main": [
+        [
+          {
+            "node": "POST Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Payload": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find URL Captcha": {
+      "main": [
+        [
+          {
+            "node": "Find Get Headers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Get Headers": {
+      "main": [
+        [
+          {
+            "node": "Get File Captcha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Erro": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Retry Max 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Max 5": {
+      "main": [
+        [
+          {
+            "node": "Find URL Captcha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Am Lich": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "82f14575-0c61-4423-ae43-2b9f8c1fd55c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e04904b93b64c642161331b8db380cfce5f5f603bd433c2125a1547e4e69cd9c"
+  },
+  "id": "5e9SN4sALNsXj77i",
+  "tags": []
+}

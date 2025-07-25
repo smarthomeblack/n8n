@@ -1,0 +1,25 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    network_mode: host
+    environment:
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+      - N8N_SECURE_COOKIE=false
+      - N8N_ENDPOINT_WEBHOOK=webhook
+      - N8N_ENDPOINT_WEBHOOK_TEST=webhooktest
+      - N8N_HOST=https://n.truongblack.xx
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n.truongblack.xx
+      - TZ=Asia/Ho_Chi_Minh
+      - N8N_RUNNER_ENABLED = true
+    hostname: n8n
+    container_name: n8n
+    restart: unless-stopped
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - /DATA/AppData/Hass/config/n8n:/config/n8n
+
+volumes:
+  n8n_data:

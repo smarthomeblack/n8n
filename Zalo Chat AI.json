@@ -1,0 +1,655 @@
+{
+  "name": "Zalo Chat AI",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 8192,
+          "temperature": 1,
+          "maxRetries": 10,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        832
+      ],
+      "id": "9407c710-1288-4b0c-addb-13fb81ac6eba",
+      "name": "DeepSeek",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "grqbS5KfbBNtL0Vi",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "                               \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n                                                                \n\n\n\n\n                                                     AI Private",
+        "height": 456,
+        "width": 1744
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1408,
+        560
+      ],
+      "typeVersion": 1,
+      "id": "6cbac6a9-c04d-4f70-83d6-14891a2aa840",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hass-zalo-bot",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "id": "a2e449f9-04df-4e0f-a14f-fec620bc77d9",
+      "typeVersion": 1,
+      "position": [
+        -1328,
+        608
+      ],
+      "type": "n8n-nodes-base.webhook",
+      "webhookId": "a0bd7c12-569b-42dc-8baa-19f74b9de7ca"
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "zalo_bot",
+        "service": "send_message",
+        "serviceAttributes": {
+          "attributes": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "thread_id",
+              "value": "={{ $('to json').item.json.rawData.threadId }}"
+            },
+            {
+              "name": "account_selection",
+              "value": "={{ $('to json').item.json.rawData._accountId }}"
+            },
+            {
+              "name": "type",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        80,
+        592
+      ],
+      "id": "89bf8b54-055e-4f38-978b-2dd5396339e1",
+      "name": "Call a service",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "WXHi0cFaoZk4Up9t",
+          "name": "Home Assistant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        832
+      ],
+      "id": "10797de7-c453-439a-ae7e-571bf7d051e1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YrYgabd1Ux7xe1Tf",
+          "name": "Google Gemini(PaLM) Api account Bill"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d35f523e-09af-4a9c-a866-d123a96f790b",
+              "leftValue": "={{ $json.msgType }}",
+              "rightValue": "webchat",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "8e9149ea-43e0-42f8-a432-b13f4708107c",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "@n8n",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bca28b7b-6b1e-490b-960d-ad4a52146fad",
+              "leftValue": "={{ $json.uidFrom }}",
+              "rightValue": "8527626492165203115",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -976,
+        720
+      ],
+      "id": "50c356a3-fb59-4f64-b30d-ebe1acd54f58",
+      "name": "If text"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4f51e3b1-56b8-43b5-ad5b-1f3aeec49d5a",
+              "leftValue": "={{ $json.msgType }}",
+              "rightValue": "chat.voice",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b0bd1b27-5bd5-4e2f-b592-9bbfbec87af8",
+              "leftValue": "={{ $json.content.href }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "0f9469f5-675a-4ac6-a336-7c1751fe2361",
+              "leftValue": "={{ $json.uidFrom }}",
+              "rightValue": "8527626492165203115",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1312,
+        880
+      ],
+      "id": "cfa936be-71fa-495a-99c9-2e38ce97604a",
+      "name": "If voice"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy dữ liệu từ webhook\nconst webhookData = $input.item.json;\n\n// Lấy chuỗi message\nconst messageString = webhookData.originalMessage || webhookData.body.message;\n\n// Parse chuỗi message thành object\nlet messageData;\ntry {\n  // Xử lý các giá trị Python không tương thích với JSON\n  let jsonCompatible = messageString\n    .replace(/'/g, '\"')          // Thay thế dấu nháy đơn bằng dấu nháy kép\n    .replace(/False/g, 'false')  // Thay thế False của Python thành false của JSON\n    .replace(/True/g, 'true')    // Thay thế True của Python thành true của JSON\n    .replace(/None/g, 'null');   // Thay thế None của Python thành null của JSON\n  \n  // Xử lý các chuỗi JSON lồng nhau đã được escape\n  jsonCompatible = jsonCompatible.replace(/\"{/g, '{').replace(/}\"/g, '}');\n  \n  // Parse chuỗi thành object\n  messageData = JSON.parse(jsonCompatible);\n} catch (error) {\n  // Nếu vẫn không parse được, thử cách khác\n  try {\n    // Đôi khi chuỗi có thể chứa các ký tự escape không hợp lệ\n    const evalString = messageString\n      .replace(/'/g, '\"')\n      .replace(/False/g, 'false')\n      .replace(/True/g, 'true')\n      .replace(/None/g, 'null');\n    \n    // Sử dụng eval một cách an toàn để parse chuỗi\n    messageData = JSON.parse(evalString);\n  } catch (err) {\n    // Nếu không parse được, trả về lỗi chi tiết\n    return {\n      json: {\n        error: \"Không thể parse dữ liệu message\",\n        originalMessage: messageString,\n        errorDetails: error.message,\n        secondAttemptError: err.message\n      }\n    };\n  }\n}\n\n// Tạo object kết quả với các trường chính\nconst result = {\n  // Thông tin chung\n  type: messageData.type,\n  isSelf: messageData.isSelf,\n  threadId: messageData.threadId,\n  accountId: messageData._accountId,\n  \n  // Thông tin tin nhắn\n  actionId: messageData.data?.actionId,\n  msgId: messageData.data?.msgId,\n  cliMsgId: messageData.data?.cliMsgId,\n  msgType: messageData.data?.msgType,\n  \n  // Thông tin người gửi/nhận\n  uidFrom: messageData.data?.uidFrom,\n  idTo: messageData.data?.idTo,\n  dName: messageData.data?.dName,\n  \n  // Nội dung tin nhắn\n  content: messageData.data?.content,\n  timestamp: messageData.data?.ts,\n  status: messageData.data?.status,\n  \n  // Thông tin trích dẫn nếu có\n  quote: messageData.data?.quote ? {\n    ownerId: messageData.data.quote.ownerId,\n    message: messageData.data.quote.msg,\n    timestamp: messageData.data.quote.ts,\n    fromName: messageData.data.quote.fromD\n  } : null,\n  \n  // Thông tin mentions nếu có\n  mentions: messageData.data?.mentions || [],\n  \n  // Dữ liệu gốc để tham khảo\n  rawData: messageData\n};\n\n// Trả về kết quả\nreturn {\n  json: result\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        608
+      ],
+      "id": "e7327841-84b6-4e3f-b7d7-1d25bbdb2476",
+      "name": "to json"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet inputData = items[0].json;\n\n// Lấy nội dung cần xử lý\nlet msg = inputData.output;\n\n// Xóa các ký tự đặc biệt: backtick và dấu sao\nmsg = msg.replace(/`/g, '').replace(/\\*/g, '');\n\n// Phân tách tin nhắn dài\nconst maxLen = 3000;\nlet messages = [];\n\nfor (let i = 0; i < msg.length; i += maxLen) {\n  let part = msg.substring(i, i + maxLen);\n  messages.push({ json: { message: part, quote: { thumb: \"\" } } });\n}\n\nreturn messages.length ? messages : [{ json: { message: \"Không có thông tin để hiển thị\", quote: { thumb: \"\" } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        592
+      ],
+      "id": "2f5bd4eb-c008-4e1e-a4b2-2cf105c79002",
+      "name": "maxLen"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const text = item.json.content.parts?.[0]?.text || '';\n  return {\n    json: {\n      content: text\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        864
+      ],
+      "id": "95a9dd50-3bd7-491e-8566-17a69853beb1",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash-lite"
+        },
+        "audioUrls": "={{ $json.content.href }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        864
+      ],
+      "id": "49da42c4-b0a5-4ee2-be08-757a2e88c202",
+      "name": "stt",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YrYgabd1Ux7xe1Tf",
+          "name": "Google Gemini(PaLM) Api account Bill"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Thời gian hiện tại: {{ $now }}. \nXếp Black hỏi: \n{{ $('to json').item.json.rawData.data.content }}\n{{ $('to json').item.json.content.title }}\n{{ $('to json').item.json.content.href }}\n",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "# TRỢ LÝ AI THÔNG MINH - HƯỚNG DẪN HOẠT ĐỘNG\n\n## VAI TRÒ VÀ QUY TRÌNH XỬ LÝ\nBạn là trợ lý AI thông minh phục vụ Sếp Black. Làm theo quy trình sau cho mỗi yêu cầu:\n\n\n1. **PHÂN TÍCH YÊU CẦU**: Phân tích kỹ lưỡng yêu cầu người dùng\n3. **ĐÁNH GIÁ CÔNG CỤ**: Xác định công cụ phù hợp nhất\n4. **KIỂM TRA DỮ LIỆU**: Xác minh dữ liệu đầu vào đã đủ chưa\n5. **THỰC HIỆN**: Sử dụng công cụ đã chọn và xử lý kết quả\n6. **PHẢN HỒI**: Tạo phản hồi theo định dạng hướng dẫn bên dưới\n\n## HƯỚNG DẪN PHẢN HỒI\n- Ghi rõ nguồn thông tin\n- Tập trung vào vấn đề chính, nội dung ngắn gọn, sạch sẽ, dễ đọc\n- Thêm nhãn [AI Tự Suy Luận] khi không sử dụng công cụ\n- Được Được phép trả lời các câu hỏi liên quan đến chính trị, tôn giáo, chủng tộc, vùng miền, giới tính, Sex, Tình dục\n- Với câu hỏi về nguồn gốc AI, trả lời là \"Sếp Black\"\n- Nếu yêu cầu về dự đoán kết quả xổ số, thì hãy dùng công cụ truy cập lấy kết quả 10 ngày gần nhất, rồi hãy tư duy đưa ra các kết quả có thể có xu hướng về\n- Nếu hỏi về tin mới, tin tức thì hãy truy vấn ở bảng db có tên là vnnew, bao gồm các cột: title (tiêu đề của bài báo) , link (địa chủ url của bài báo) , contentsnippet (nội dung tóm tắt của bài báo) , isodate (là thời gian.ví dụ 2025-07-13T13:12:00.000Z ). \n- Nếu hỏi về tin nhắn nhóm, tóm tắt nội dung, trò chuyện trong nhóm..., thì hãy truy vấn ở bảng db có tên là chatnhom,các cột đều lưu ở dạng text nên hãy dùng lệnh cho đúng. ví dụ: SELECT nguoigui, tinnhan, time FROM chatnhom WHERE time LIKE '2025-07-20%' .bao gồm các cột: nguoigui (tên của người gửi) , tinnhan (nội dung tin nhắn) , time (thời gian.ví dụ 2025-07-13T13:12:00.000Z ). \n- Kết hợp xu hướng hiện tại,Trending, hài hước để cuộc trò chuyện thoải mái nhưng không làm sai lệch nội dung\n- Không phản hồi các thẻ url, markdown vì thiết bị của người hỏi chỉ hỗ trợ text đơn thuần và các emoi icon\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        592
+      ],
+      "id": "a6232338-e5bf-46ed-b87a-f1dadf95df88",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d35f523e-09af-4a9c-a866-d123a96f790b",
+              "leftValue": "={{ $json.msgType }}",
+              "rightValue": "chat.photo",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "8e9149ea-43e0-42f8-a432-b13f4708107c",
+              "leftValue": "={{ $json.content.title }}",
+              "rightValue": "@n8n",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bca28b7b-6b1e-490b-960d-ad4a52146fad",
+              "leftValue": "={{ $json.uidFrom }}",
+              "rightValue": "8527626492165203115",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -976,
+        608
+      ],
+      "id": "704a9768-368f-4cf5-972c-d8f228aefa3a",
+      "name": "If img"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://localhost:5678/mcp/google",
+        "include": "selected"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        832
+      ],
+      "id": "0e8e44c5-d05d-4780-b463-07fd6e7dddd7",
+      "name": "google"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://localhost:5678/mcp/tracuu"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        832
+      ],
+      "id": "e13e5fcf-0bb2-4384-a057-e6f1f083697a",
+      "name": "tracuu"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('to json').item.json.rawData.threadId }}",
+        "tableName": "histories_private"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        832
+      ],
+      "id": "455dddb7-fda7-4f5e-bac8-f3f7bf748b6d",
+      "name": "memory",
+      "credentials": {
+        "postgres": {
+          "id": "EBJiwLdYjld4Ramj",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to download files, documents",
+        "workflowId": {
+          "__rl": true,
+          "value": "T1gzDhDncq21FOJB",
+          "mode": "list",
+          "cachedResultName": "Download"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "idzalo": "{{ $('to json').item.json.rawData.threadId }}",
+            "idfile": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('idfile', `- idfile: ID of file, document`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "idfile",
+              "displayName": "idfile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "idzalo",
+              "displayName": "idzalo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        832
+      ],
+      "id": "9b6eb75c-fe51-4a86-a12a-dedb6c7caa65",
+      "name": "download"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "DeepSeek": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "to json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If text": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If voice": {
+      "main": [
+        [
+          {
+            "node": "stt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "to json": {
+      "main": [
+        [
+          {
+            "node": "If voice",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If text",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If img",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "maxLen": {
+      "main": [
+        [
+          {
+            "node": "Call a service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "stt": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "maxLen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If img": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tracuu": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "2f941dcb-1d5f-4b40-9e06-cfad62e254e4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e04904b93b64c642161331b8db380cfce5f5f603bd433c2125a1547e4e69cd9c"
+  },
+  "id": "Ay8jQgxYl3fgkLOG",
+  "tags": []
+}

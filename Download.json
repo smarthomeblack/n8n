@@ -1,0 +1,185 @@
+{
+  "name": "Download",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "idfile",
+              "type": "any"
+            },
+            {
+              "name": "idzalo",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "d973e357-bbac-4a05-8ed1-c05694ac2b18",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1328,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy key của binary data (thường là \"data\")\nconst binaryPropertyName = Object.keys($input.item.binary)[0];\n\n// Lấy thông tin metadata của binary data\nconst binaryData = $input.item.binary[binaryPropertyName];\n\n// Lấy tên file từ metadata\nconst fileName = binaryData.fileName || \"unknown-file\";\nconst fileExtension = binaryData.fileExtension || \"\";\nconst mimeType = binaryData.mimeType;\n\n// Tạo ngày tháng với định dạng DD-MM-YYYY\nconst now = new Date();\nconst day = String(now.getDate()).padStart(2, '0');\nconst month = String(now.getMonth() + 1).padStart(2, '0');\nconst year = now.getFullYear();\nconst formattedDate = `${day}-${month}-${year}`;\n\n// Tạo tên file với định dạng ngày tháng mới\nconst fullFileName = `${formattedDate}-${fileName}`;\n\n// Trả về kết quả\nreturn {\n  json: {\n    originalFileName: fileName,\n    extension: fileExtension,\n    mimeType: mimeType,\n    fullFileName: fullFileName,\n    savePath: `/config/n8n/${fullFileName}`\n  },\n  // Quan trọng: Giữ nguyên binary data để chuyển đến node tiếp theo\n  binary: $input.item.binary\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        560
+      ],
+      "id": "d86f9acf-7a14-4479-8dde-fa79be96a587",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.idfile }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1152,
+        560
+      ],
+      "id": "ca8f6ba0-3fdd-4800-95af-c9e4e503d912",
+      "name": "get file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cms7O4ilFGmxkAzy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.savePath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        560
+      ],
+      "id": "897b343c-d029-4efd-b439-4b9307521d8c",
+      "name": "save file"
+    },
+    {
+      "parameters": {
+        "resource": "service",
+        "operation": "call",
+        "domain": "zalo_bot",
+        "service": "send_file",
+        "serviceAttributes": {
+          "attributes": [
+            {
+              "name": "thread_id",
+              "value": "={{ $('Start').item.json.idzalo }}"
+            },
+            {
+              "name": "account_selection",
+              "value": "+84764343466"
+            },
+            {
+              "name": "type",
+              "value": "1"
+            },
+            {
+              "name": "file_path_or_url",
+              "value": "={{ $json.savePath }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.homeAssistant",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        560
+      ],
+      "id": "20cff54b-043f-4245-93ce-85fe237fa2b8",
+      "name": "sent file",
+      "credentials": {
+        "homeAssistantApi": {
+          "id": "WXHi0cFaoZk4Up9t",
+          "name": "Home Assistant account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "get file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "save file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get file": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save file": {
+      "main": [
+        [
+          {
+            "node": "sent file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "a19bb6c5-ce65-4486-b852-553e47163c75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e04904b93b64c642161331b8db380cfce5f5f603bd433c2125a1547e4e69cd9c"
+  },
+  "id": "T1gzDhDncq21FOJB",
+  "tags": []
+}

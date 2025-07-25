@@ -1,0 +1,805 @@
+{
+  "name": "MCP Server",
+  "nodes": [
+    {
+      "parameters": {
+        "toolDescription": "This is a tool to search for the latest information and data using Google\n\nFollow the steps below\n\nAnalyze the keywords that users need to search for\n\nparameters2_Value: Enter search keywords\n\nAfter having search results, use the fetch_url tool to access the url links to get more detailed content\n\nThen summarize the information obtained from different data sources",
+        "url": "https://www.googleapis.com/customsearch/v1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyCkNkn-hDSD86LgL0D2vvkls77ux3eL4zY"
+            },
+            {
+              "name": "cx",
+              "value": "c568ca07fc0124252"
+            },
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "optimizeResponse": true,
+        "dataField": "items",
+        "fieldsToInclude": "selected",
+        "fields": "=pagemap.metatags[0]"
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        384
+      ],
+      "id": "e16a2137-cdaf-49ae-94a8-13ee8c668dbf",
+      "name": "search-tool"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "📧 SEND EMAIL: Send a new email via Gmail. Required fields:\n\nExample: To: john@example.com, Subject: Meeting Tomorrow, Message: Hi John, Just confirming our meeting tomorrow at 2pm.",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', `- To: Recipient email address(es), separate multiple with commas (example: user@example.com)`, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `- Subject: Email subject line`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `- Message: Full email content/body`, 'string') }}",
+        "options": {}
+      },
+      "name": "send-mail",
+      "id": "da24907f-168c-4f3e-8d03-78e0036e3952",
+      "typeVersion": 2.1,
+      "position": [
+        128,
+        288
+      ],
+      "type": "n8n-nodes-base.gmailTool",
+      "webhookId": "2d84bf11-2acf-4480-a058-81109e03596a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "e9p4d9udeF87bDqe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "📨 SEARCH EMAILS: Find emails in Gmail using filters. Optional fields:\n\nExample: Label_ID_Names_or_IDs: INBOX, Received_After: 2025-07-01T00:00:00.00+07:00",
+        "resource": "thread",
+        "filters": {
+          "labelIds": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Label_ID_Names_or_IDs', `- Label_ID_Names_or_IDs: Filter by label (INBOX, UNREAD, IMPORTANT, etc)`, 'string') }}",
+          "receivedAfter": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Received_After', `- Received_After: Filter by date (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}",
+          "receivedBefore": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Received_Before', `- Received_Before: Filter by date (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}"
+        }
+      },
+      "name": "get-mail",
+      "id": "0930290c-1d27-4979-81bb-07ed03ef1ffd",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        288
+      ],
+      "type": "n8n-nodes-base.gmailTool",
+      "webhookId": "b13c3727-fa07-4cca-bcc1-e178171f44f6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "e9p4d9udeF87bDqe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "📬 MARK AS READ: Mark an email as read. Required field:\n\nExample: Message_ID: 18d7a8c9e3b2a1",
+        "operation": "markAsRead",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', `- Message_ID: ID of the email (get this from search results)`, 'string') }}"
+      },
+      "name": "mark-read-mail",
+      "id": "9129d998-52cc-4b0b-b281-a2b60dfc3aa1",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        288
+      ],
+      "type": "n8n-nodes-base.gmailTool",
+      "webhookId": "180d467f-e29d-4042-a3f8-10479a6a38dc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "e9p4d9udeF87bDqe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "↩️ REPLY TO EMAIL: Reply to an existing email. Required fields:\n\nExample: Message_ID: 18d7a8c9e3b2a1, Message: Thanks for your email. I'll get back to you soon.",
+        "operation": "reply",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', `- Message_ID: ID of the email to reply to (get this from search results)`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `- Message: Your reply content`, 'string') }}",
+        "options": {}
+      },
+      "name": "reply-mail",
+      "id": "1a33eb51-1de1-4ea3-ae34-d01b9830bc30",
+      "typeVersion": 2.1,
+      "position": [
+        496,
+        288
+      ],
+      "type": "n8n-nodes-base.gmailTool",
+      "webhookId": "644965fa-8039-4612-8eef-9f7f1ac7c6f6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "e9p4d9udeF87bDqe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "🗑️ DELETE EMAIL: Permanently delete an email. Required field:\n\nExample: Message_ID: 18d7a8c9e3b2a1",
+        "operation": "delete",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', `- Message_ID: ID of the email to delete (get this from search results)`, 'string') }}"
+      },
+      "name": "delete-mail",
+      "id": "b13e42ed-8bab-4dfc-a7ab-8e4e68495049",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        288
+      ],
+      "type": "n8n-nodes-base.gmailTool",
+      "webhookId": "cd2d73be-40f9-4d93-a608-a435d791153e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "e9p4d9udeF87bDqe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "📅 FIND CALENDAR EVENTS: Search for events in your calendar. Required fields:\n\nFor relative dates like 'today', 'tomorrow', 'next week', the tool will convert them automatically.",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "truongbber@gmail.com",
+          "mode": "list",
+          "cachedResultName": "truongbber@gmail.com"
+        },
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', `- After: Start date/time (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', `- Before: End date/time (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}",
+        "options": {}
+      },
+      "name": "get-events-calendar",
+      "id": "07335a61-6c43-47cb-bdc2-100fd524ce62",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        464
+      ],
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kAo1rQTQaRFDEQz8",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "📝 CREATE CALENDAR EVENT: Add a new event to your calendar. Required fields:\n",
+        "calendar": {
+          "__rl": true,
+          "value": "truongbber@gmail.com",
+          "mode": "list",
+          "cachedResultName": "truongbber@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', `- Start: Start date/time (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', `- End: End date/time (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}",
+        "useDefaultReminders": false,
+        "additionalFields": {
+          "color": "1",
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', `- Description: Event details`, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', `- Summary: Event title`, 'string') }}"
+        },
+        "remindersUi": {
+          "remindersValues": [
+            {
+              "method": "popup",
+              "minutes": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('remindersValues0_Minutes_Before', `- remindersValues0_Minutes_Before: Minutes before event to send reminder (optional)`, 'number') }}"
+            }
+          ]
+        }
+      },
+      "name": "create-event-calendar",
+      "id": "fecef3ed-5267-401d-a1ee-3a9c12b12179",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        464
+      ],
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kAo1rQTQaRFDEQz8",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "✏️ UPDATE CALENDAR EVENT: Edit an existing event. Required fields:",
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "truongbber@gmail.com",
+          "mode": "list",
+          "cachedResultName": "truongbber@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', `- Event_ID: ID of the event to update (get this from search results)`, 'string') }}",
+        "useDefaultReminders": false,
+        "updateFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', `- Description: New event details`, 'string') }}",
+          "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', `- End: New end date/time (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}",
+          "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', `- Start: New start date/time (format: YYYY-MM-DDTHH:MM:SS.00+07:00)`, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', `- Summary: New event title`, 'string') }}"
+        },
+        "remindersUi": {
+          "remindersValues": [
+            {
+              "method": "popup",
+              "minutes": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('remindersValues0_Minutes_Before', `- remindersValues0_Minutes_Before: Minutes before event to send reminder (optional)`, 'number') }}"
+            }
+          ]
+        }
+      },
+      "name": "update-event-calendar",
+      "id": "e3b05cda-421d-4d56-8d13-038a9f525d7a",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        464
+      ],
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kAo1rQTQaRFDEQz8",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "❌ DELETE CALENDAR EVENT: Remove an event from your calendar. Required field:\n",
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "truongbber@gmail.com",
+          "mode": "list",
+          "cachedResultName": "truongbber@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', `- Event_ID: ID of the event to delete (get this from search results)`, 'string') }}",
+        "options": {}
+      },
+      "name": "delete-event-calendar",
+      "id": "707e19f3-fa62-4600-bdf0-bc76a6d86421",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        464
+      ],
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "kAo1rQTQaRFDEQz8",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "📄 CREATE DOCUMENT: Create a new Google Doc. Required field:\n",
+        "folderId": "default",
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', `- Title: Name of the new document`, 'string') }}"
+      },
+      "name": "create-document",
+      "id": "b8c2273b-f036-472a-bb4a-72b644edeaef",
+      "typeVersion": 2,
+      "position": [
+        96,
+        624
+      ],
+      "type": "n8n-nodes-base.googleDocsTool",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "eu52oIWuUqg2gbIz",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "🔍 SEARCH DOCUMENTS: Find files in Google Drive. Required field:\n\nExample: Query_String: name contains 'budget' (finds files with 'budget' in the name)\nExample: Query_String: name contains 'report' and mimeType='application/vnd.google-apps.document' (finds Google Docs with 'report' in the name)\n\nReply with ID if available",
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query_String', `- Query_String: Search using format \"name contains 'keyword'\" where keyword is what you're looking for`, 'string') }}",
+        "limit": 100,
+        "filter": {},
+        "options": {}
+      },
+      "name": "search-docs",
+      "id": "4499d3dc-bcf7-400e-b25a-add11f46fa0e",
+      "typeVersion": 3,
+      "position": [
+        240,
+        624
+      ],
+      "type": "n8n-nodes-base.googleDriveTool",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cms7O4ilFGmxkAzy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "📖 GET DOCUMENT: Retrieve content of a Google Doc. Required field:\n",
+        "operation": "get",
+        "documentURL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Doc_ID_or_URL', `- Doc_ID_or_URL: Document ID or full URL (example: '1AbCdEfGhIjK' or 'https://docs.google.com/document/d/1AbCdEfGhIjK/edit')`, 'string') }}"
+      },
+      "name": "get-docs",
+      "id": "41fa857c-351d-4225-b86a-ecb8bbdfc70a",
+      "typeVersion": 2,
+      "position": [
+        368,
+        624
+      ],
+      "type": "n8n-nodes-base.googleDocsTool",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "eu52oIWuUqg2gbIz",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "✏️ UPDATE DOCUMENT: Add content to a Google Doc. Required fields:\n",
+        "operation": "update",
+        "documentURL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Doc_ID_or_URL', `- Doc_ID_or_URL: Document ID or full URL`, 'string') }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('actionFields0_Text', `- actionFields0_Text: Text to add to the document`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "name": "update-docs",
+      "id": "1b54f58d-ba07-481a-a585-a418afb91a6b",
+      "typeVersion": 2,
+      "position": [
+        496,
+        624
+      ],
+      "type": "n8n-nodes-base.googleDocsTool",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "eu52oIWuUqg2gbIz",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "🗑️ DELETE DOCUMENT: Permanently remove a file from Google Drive. Required field:\n",
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File', `- File: ID of the file to delete (get this from search results)`, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "name": "delete-docs",
+      "id": "2b452fdb-764b-43ea-898e-76cb6f307cfa",
+      "typeVersion": 3,
+      "position": [
+        608,
+        624
+      ],
+      "type": "n8n-nodes-base.googleDriveTool",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "cms7O4ilFGmxkAzy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "=    \"This tool is used to look up the following.\",\n    \"Each tool requires different input fields.\",\n    \"Only the specified fields should be filled; all Other fields fill in 0.\",\n    \"Please reply back with full data.\"\n    \"\",\n    \"1. Lottery:\",\n    \"- Required fields: khuvuc (region), date (date of draw)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"2. Traffic Violations & violation:\",\n    \"- Required fields: bienso (license plate), loaixe (vehicle type)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"3. Vehicle Registration (Inspection):\",\n    \"- Required fields: bienso (license plate), temdk (registration code)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"4. Lunar Calendar, Auspicious Hours, Good/Bad Days:\",\n    \"- Required field: dateal (lunar date)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"Your task is to identify which tool to use based on the provided input,\",\n    \"and ensure that only the required fields for that tool are filled in.\"\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "5e9SN4sALNsXj77i",
+          "mode": "list",
+          "cachedResultName": "Tra Cứu"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "loaixe": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('loaixe', `If car, value 1\nIf motorbike, value 2\nIf electric vehicle, value 3\nOnly accept values: 1, 2, 3`, 'number') }}",
+            "bienso": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('bienso', `license plates for cars, motorbikes, electric vehicles`, 'string') }}",
+            "khuvuc": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('khuvuc', `includes the following areas:\nxsmb: northern lottery\nxsmn: southern lottery\nxsmt: central lottery\nOnly accept values: xsmb, xsmn, xsmt`, 'string') }}",
+            "date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date', `date in DD-MM-YYYY format\neg: 2025-07-25`, 'string') }}",
+            "temdk": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('temdk', `inspection stamp, or inspection stamp code, stamp code`, 'string') }}",
+            "dateal": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('dateal', `date in YYYY-MM-DD format\neg 2025-07-25`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "loaixe",
+              "displayName": "loaixe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "bienso",
+              "displayName": "bienso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "khuvuc",
+              "displayName": "khuvuc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "temdk",
+              "displayName": "temdk",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dateal",
+              "displayName": "dateal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        384
+      ],
+      "id": "2af5fcd4-c9ff-4cf8-a996-7873ff896a34",
+      "name": "tracuu"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://192.168.1.22:3001/servers/mcp-weather/sse"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        992,
+        384
+      ],
+      "id": "551d3869-9746-40ae-a834-ddcd086ea786",
+      "name": "weather"
+    },
+    {
+      "parameters": {
+        "path": "google"
+      },
+      "name": "Google",
+      "id": "f5b355ae-fa78-4dbc-adbe-6d484e76fc8f",
+      "typeVersion": 2,
+      "position": [
+        320,
+        48
+      ],
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "webhookId": "6f03b961-c9e2-4891-a19e-cec5dd53cdfe"
+    },
+    {
+      "parameters": {
+        "path": "tracuu"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        928,
+        48
+      ],
+      "id": "8dadc257-4fe5-41b4-a4a7-849f9225c84f",
+      "name": "Tra Cuu",
+      "webhookId": "7cc91914-00eb-40f5-a6f8-158d13513327"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to analyze images",
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "id"
+        },
+        "text": "Please analyze this image in detail.",
+        "imageUrls": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL_s_', `- URL_s_ : enter image url`, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGeminiTool",
+      "typeVersion": 1,
+      "position": [
+        736,
+        624
+      ],
+      "id": "4593a6b3-2abe-453c-bf75-79f46dbc90a7",
+      "name": "image-analysis",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YrYgabd1Ux7xe1Tf",
+          "name": "Google Gemini(PaLM) Api account Bill"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "search-tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Tra Cuu",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send-mail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-mail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mark-read-mail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reply-mail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete-mail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-events-calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-event-calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-event-calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete-event-calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-document": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search-docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete-docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tracuu": {
+      "ai_tool": [
+        [
+          {
+            "node": "Tra Cuu",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "Tra Cuu",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "image-analysis": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "cfc943f1-6b85-4774-a343-5e65ebfa44db",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e04904b93b64c642161331b8db380cfce5f5f603bd433c2125a1547e4e69cd9c"
+  },
+  "id": "ZkwFi0NkI75Zg9S5",
+  "tags": []
+}
