@@ -21,7 +21,7 @@
           "values": [
             {
               "name": "loaixe",
-              "type": "any"
+              "type": "number"
             },
             {
               "name": "bienso",
@@ -40,7 +40,11 @@
               "type": "any"
             },
             {
-              "name": "dateal",
+              "name": "datedl",
+              "type": "any"
+            },
+            {
+              "name": "chitiet",
               "type": "any"
             }
           ]
@@ -51,7 +55,7 @@
       "name": "Start",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "position": [
-        -832,
+        -736,
         16
       ]
     },
@@ -647,12 +651,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// Lấy dữ liệu HTML từ phản hồi\nconst response = items[0].json;\nlet html = \"\";\n\n// Kiểm tra cấu trúc dữ liệu đầu vào\nif (response && response.data) {\n  html = response.data;\n} else if (typeof response === 'string') {\n  html = response;\n}\n\n// Kiểm tra xem có dữ liệu HTML không\nif (!html) {\n  return {\n    json: {\n      success: false,\n      message: \"Không tìm thấy dữ liệu HTML trong phản hồi\"\n    }\n  };\n}\n\n// Hàm giải mã HTML entities thành ký tự Unicode\nfunction decodeHTMLEntities(text) {\n  if (!text) return '';\n  \n  // Tạo một phần tử div tạm thời để sử dụng tính năng giải mã HTML của trình duyệt\n  const tempElement = document.createElement('div');\n  tempElement.innerHTML = text;\n  \n  // Lấy nội dung văn bản đã được giải mã\n  const decoded = tempElement.textContent || tempElement.innerText;\n  \n  return decoded;\n}\n\n// Trong Node.js, không có document, nên chúng ta cần một cách tiếp cận khác\nfunction decodeHTMLEntitiesNode(text) {\n  if (!text) return '';\n  \n  // Bảng ánh xạ các HTML entities phổ biến trong tiếng Việt\n  const vietnameseEntities = {\n    '&#225;': 'á', '&#224;': 'à', '&#7843;': 'ả', '&#227;': 'ã', '&#7841;': 'ạ',\n    '&#226;': 'â', '&#7845;': 'ấ', '&#7847;': 'ầ', '&#7849;': 'ẩ', '&#7851;': 'ẫ', '&#7853;': 'ậ',\n    '&#259;': 'ă', '&#7855;': 'ắ', '&#7857;': 'ằ', '&#7859;': 'ẳ', '&#7861;': 'ẵ', '&#7863;': 'ặ',\n    '&#233;': 'é', '&#232;': 'è', '&#7867;': 'ẻ', '&#7869;': 'ẽ', '&#7865;': 'ẹ',\n    '&#234;': 'ê', '&#7871;': 'ế', '&#7873;': 'ề', '&#7875;': 'ể', '&#7877;': 'ễ', '&#7879;': 'ệ',\n    '&#237;': 'í', '&#236;': 'ì', '&#7881;': 'ỉ', '&#297;': 'ĩ', '&#7883;': 'ị',\n    '&#243;': 'ó', '&#242;': 'ò', '&#7887;': 'ỏ', '&#245;': 'õ', '&#7885;': 'ọ',\n    '&#244;': 'ô', '&#7889;': 'ố', '&#7891;': 'ồ', '&#7893;': 'ổ', '&#7895;': 'ỗ', '&#7897;': 'ộ',\n    '&#417;': 'ơ', '&#7899;': 'ớ', '&#7901;': 'ờ', '&#7903;': 'ở', '&#7905;': 'ỡ', '&#7907;': 'ợ',\n    '&#250;': 'ú', '&#249;': 'ù', '&#7911;': 'ủ', '&#361;': 'ũ', '&#7909;': 'ụ',\n    '&#432;': 'ư', '&#7913;': 'ứ', '&#7915;': 'ừ', '&#7917;': 'ử', '&#7919;': 'ữ', '&#7921;': 'ự',\n    '&#253;': 'ý', '&#7923;': 'ỳ', '&#7927;': 'ỷ', '&#7929;': 'ỹ', '&#7925;': 'ỵ',\n    '&#273;': 'đ',\n    '&#193;': 'Á', '&#192;': 'À', '&#7842;': 'Ả', '&#195;': 'Ã', '&#7840;': 'Ạ',\n    '&#194;': 'Â', '&#7844;': 'Ấ', '&#7846;': 'Ầ', '&#7848;': 'Ẩ', '&#7850;': 'Ẫ', '&#7852;': 'Ậ',\n    '&#258;': 'Ă', '&#7854;': 'Ắ', '&#7856;': 'Ằ', '&#7858;': 'Ẳ', '&#7860;': 'Ẵ', '&#7862;': 'Ặ',\n    '&#201;': 'É', '&#200;': 'È', '&#7866;': 'Ẻ', '&#7868;': 'Ẽ', '&#7864;': 'Ẹ',\n    '&#202;': 'Ê', '&#7870;': 'Ế', '&#7872;': 'Ề', '&#7874;': 'Ể', '&#7876;': 'Ễ', '&#7878;': 'Ệ',\n    '&#205;': 'Í', '&#204;': 'Ì', '&#7880;': 'Ỉ', '&#296;': 'Ĩ', '&#7882;': 'Ị',\n    '&#211;': 'Ó', '&#210;': 'Ò', '&#7886;': 'Ỏ', '&#213;': 'Õ', '&#7884;': 'Ọ',\n    '&#212;': 'Ô', '&#7888;': 'Ố', '&#7890;': 'Ồ', '&#7892;': 'Ổ', '&#7894;': 'Ỗ', '&#7896;': 'Ộ',\n    '&#416;': 'Ơ', '&#7898;': 'Ớ', '&#7900;': 'Ờ', '&#7902;': 'Ở', '&#7904;': 'Ỡ', '&#7906;': 'Ợ',\n    '&#218;': 'Ú', '&#217;': 'Ù', '&#7910;': 'Ủ', '&#360;': 'Ũ', '&#7908;': 'Ụ',\n    '&#431;': 'Ư', '&#7912;': 'Ứ', '&#7914;': 'Ừ', '&#7916;': 'Ử', '&#7918;': 'Ữ', '&#7920;': 'Ự',\n    '&#221;': 'Ý', '&#7922;': 'Ỳ', '&#7926;': 'Ỷ', '&#7928;': 'Ỹ', '&#7924;': 'Ỵ',\n    '&#272;': 'Đ'\n  };\n  \n  // Thay thế các HTML entities bằng ký tự Unicode tương ứng\n  return text.replace(/&#\\d+;/g, function(match) {\n    return vietnameseEntities[match] || match;\n  });\n}\n\n// Trích xuất thông tin lịch âm dương\nconst lichAmDuong = {};\n\n// Trích xuất ngày dương lịch\nconst ngayDuongMatch = html.match(/<p class=\"text-num text-solar fw-bold mar-t-10 mar-b-10\">(\\d+)<\\/p>/);\nlichAmDuong.ngayDuong = ngayDuongMatch ? ngayDuongMatch[1] : \"\";\n\n// Trích xuất tháng và năm dương lịch\nconst thangNamDuongMatch = html.match(/<p class=\"text-year mar-b-5\">Tháng (\\d+) năm (\\d+)<\\/p>/);\nif (thangNamDuongMatch) {\n  lichAmDuong.thangDuong = thangNamDuongMatch[1];\n  lichAmDuong.namDuong = thangNamDuongMatch[2];\n}\n\n// Trích xuất ngày âm lịch\nconst ngayAmMatch = html.match(/<p class=\"text-num text-lunar fw-bold mar-t-10 mar-b-10\">(\\d+)<\\/p>/);\nlichAmDuong.ngayAm = ngayAmMatch ? ngayAmMatch[1] : \"\";\n\n// Trích xuất tháng và năm âm lịch\nconst thangNamAmMatch = html.match(/<p class=\"text-year mar-b-5\">Tháng (\\d+) năm ([^<]+)<\\/p>/g);\nif (thangNamAmMatch && thangNamAmMatch.length >= 2) {\n  // Lấy chuỗi thứ hai (âm lịch)\n  const amLichStr = thangNamAmMatch[1];\n  const amLichMatch = amLichStr.match(/Tháng (\\d+) năm ([^<]+)/);\n  if (amLichMatch) {\n    lichAmDuong.thangAm = amLichMatch[1];\n    lichAmDuong.namAm = amLichMatch[2].trim();\n  }\n}\n\n// Trích xuất can chi ngày và tháng\nconst canChiMatch = html.match(/<p class=\"text-special color-red\">Ngày ([^-]+) - Tháng ([^<]+)<\\/p>/);\nif (canChiMatch) {\n  lichAmDuong.ngayCanChi = decodeHTMLEntitiesNode(canChiMatch[1].trim());\n  lichAmDuong.thangCanChi = decodeHTMLEntitiesNode(canChiMatch[2].trim());\n}\n\n// Trích xuất mệnh ngày\nconst menhNgayMatch = html.match(/<strong>Mệnh ngày:<\\/strong>([^<]+)<\\/p>/);\nlichAmDuong.menhNgay = menhNgayMatch ? menhNgayMatch[1].trim() : \"\";\n\n// Trích xuất giờ hoàng đạo\nconst gioHoangDaoMatch = html.match(/<strong>Giờ hoàng đạo:<\\/strong>([^<]+)<\\/p>/);\nconst gioHoangDaoText = gioHoangDaoMatch ? gioHoangDaoMatch[1].trim() : \"\";\n\n// Trích xuất tuổi xung\nconst tuoiXungMatch = html.match(/<strong>Tuổi xung:<\\/strong>([^<]+)<\\/p>/);\nlichAmDuong.tuoiXung = tuoiXungMatch ? tuoiXungMatch[1].trim() : \"\";\n\n// Tạo các thông tin bổ sung\nlichAmDuong.ngayDuongLich = `${lichAmDuong.ngayDuong}/${lichAmDuong.thangDuong}/${lichAmDuong.namDuong}`;\nlichAmDuong.ngayAmLich = `${lichAmDuong.ngayAm}/${lichAmDuong.thangAm}/${lichAmDuong.namAm}`;\n\n// Trích xuất ngày trước và sau\nconst ngayTruocMatch = html.match(/loadLichVansu\\('([^']+)'\\)/);\nlichAmDuong.ngayTruoc = ngayTruocMatch ? ngayTruocMatch[1] : \"\";\n\nconst ngaySauMatch = html.match(/btn-lvn-today-next\" href=\"javascript:void\\(0\\);\" onclick=\"javascript:loadLichVansu\\('([^']+)'\\)\">/);\nlichAmDuong.ngaySau = ngaySauMatch ? ngaySauMatch[1] : \"\";\n\n// Trích xuất ngày hiện tại từ input hidden\nconst ngayChonMatch = html.match(/<input type=\"hidden\" id=\"dayChose\" value=\"([^\"]+)\">/);\nlichAmDuong.ngayChon = ngayChonMatch ? ngayChonMatch[1] : \"\";\n\n// Định dạng lại các giờ hoàng đạo thành mảng\nconst gioHoangDaoArray = [];\n\n// Xử lý đặc biệt cho giờ hoàng đạo để lấy đúng tên giờ\nif (gioHoangDaoText) {\n  // Tìm tất cả các giờ trong chuỗi\n  // Trong văn bản HTML, có thể thấy các giờ như: Tý (23h-1h), Sửu (1h-3h), Mão (5h-7h), v.v.\n  const gioMatches = gioHoangDaoText.match(/([^,(]+)\\s*\\(([^)]+)\\)/g);\n  \n  if (gioMatches) {\n    gioMatches.forEach(gioStr => {\n      const parts = gioStr.match(/([^,(]+)\\s*\\(([^)]+)\\)/);\n      if (parts && parts.length >= 3) {\n        // Tên giờ có thể có các ký tự đặc biệt như \"Tý\", \"Sửu\", v.v.\n        const ten = decodeHTMLEntitiesNode(parts[1].trim());\n        const thoiGian = parts[2].trim();\n        \n        gioHoangDaoArray.push({\n          ten: ten,\n          thoiGian: thoiGian\n        });\n      }\n    });\n  }\n}\n\n// Định dạng lại các tuổi xung thành mảng\nconst tuoiXungArray = lichAmDuong.tuoiXung ? lichAmDuong.tuoiXung.split(',').map(tuoi => decodeHTMLEntitiesNode(tuoi.trim())) : [];\n\n// Trả về kết quả\nreturn {\n  json: {\n    success: true,\n    data: {\n      duongLich: {\n        ngay: lichAmDuong.ngayDuong,\n        thang: lichAmDuong.thangDuong,\n        nam: lichAmDuong.namDuong,\n        ngayThangNam: lichAmDuong.ngayDuongLich\n      },\n      amLich: {\n        ngay: lichAmDuong.ngayAm,\n        thang: lichAmDuong.thangAm,\n        nam: lichAmDuong.namAm,\n        ngayThangNam: lichAmDuong.ngayAmLich,\n        ngayCanChi: lichAmDuong.ngayCanChi,\n        thangCanChi: lichAmDuong.thangCanChi\n      },\n      thongTinKhac: {\n        menhNgay: lichAmDuong.menhNgay,\n        gioHoangDao: gioHoangDaoArray,\n        tuoiXung: tuoiXungArray\n      },\n    }\n  }\n};"
+        "jsCode": "// Chào bạn, đây là phiên bản hoàn thiện cuối cùng của mã.\n// Phiên bản này bao gồm một hàm cleanup nâng cao để xử lý\n// triệt để các ký tự HTML đặc biệt, giúp kết quả hiển thị tiếng Việt hoàn hảo.\n\nconst item = items[0];\nconst rawDataString = item.json.data;\n\nlet html = '';\ntry {\n  // Bước 1: Chuyển chuỗi JSON thành mã HTML hoàn chỉnh.\n  const htmlParts = JSON.parse(rawDataString);\n  html = Array.isArray(htmlParts) ? htmlParts.join('') : rawDataString;\n} catch (e) {\n  html = rawDataString;\n}\n\nconst result = {};\n\n/**\n * Hàm tiện ích đa năng để làm sạch văn bản, bao gồm cả việc\n * giải mã các ký tự HTML đặc biệt (HTML entities).\n * @param {string} str - Chuỗi HTML đầu vào.\n * @returns {string} - Văn bản sạch.\n */\nfunction cleanup(str) {\n  if (!str) return '';\n  try {\n    // Bản đồ các ký tự HTML phổ biến\n    const entities = {\n        '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '\"', '&#39;': \"'\",\n        '&nbsp;': ' ', '&agrave;': 'à', '&Agrave;': 'À', '&aacute;': 'á', '&Aacute;': 'Á',\n        '&acirc;': 'â', '&Acirc;': 'Â', '&atilde;': 'ã', '&Atilde;': 'Ã', '&egrave;': 'è',\n        '&Egrave;': 'È', '&eacute;': 'é', '&Eacute;': 'É', '&ecirc;': 'ê', '&Ecirc;': 'Ê',\n        '&igrave;': 'ì', '&Igrave;': 'Ì', '&iacute;': 'í', '&Iacute;': 'Í', '&ograve;': 'ò',\n        '&Ograve;': 'Ò', '&oacute;': 'ó', '&Oacute;': 'Ó', '&ocirc;': 'ô', '&Ocirc;': 'Ô',\n        '&otilde;': 'õ', '&Otilde;': 'Õ', '&ugrave;': 'ù', '&Ugrave;': 'Ù', '&uacute;': 'ú',\n        '&Uacute;': 'Ú', '&yacute;': 'ý', '&Yacute;': 'Ý', '&đ;': 'đ', '&Đ;': 'Đ'\n    };\n    \n    // Thay thế các ký tự HTML\n    let decodedStr = str.replace(/&[a-zA-Z#0-9]+;/g, entity => entities[entity] || entity);\n\n    // Dọn dẹp các thẻ và khoảng trắng\n    return decodedStr\n      .replace(/<br\\s*\\/?>/gi, '\\n')\n      .replace(/<p[^>]*>/gi, '\\n')\n      .replace(/<li[^>]*>/gi, '\\n- ')\n      .replace(/<[^>]*>?/g, ' ')\n      .replace(/“|”/g, '\"')\n      .replace(/[ \\t]+/g, ' ')\n      .replace(/\\n\\s*\\n/g, '\\n')\n      .replace(/^[\\s\\n]+|[\\s\\n]+$/g, '')\n      .trim();\n  } catch (e) {\n    return str;\n  }\n}\n\n\n/**\n * Hàm trích xuất nội dung dựa vào một nhãn (label) cụ thể.\n * @param {string} labelText - Văn bản của nhãn cần tìm (ví dụ: \"Giờ Hoàng Đạo\").\n * @returns {string} - Nội dung tương ứng đã được làm sạch.\n */\nfunction extractByLabel(labelText) {\n    const regex = new RegExp(`<label>${labelText}\\\\s*<\\\\/label>[\\\\s\\\\S]*?<\\\\/td>\\\\s*<td>([\\\\s\\\\S]*?)<\\\\/td>`, 'i');\n    const match = html.match(regex);\n    return cleanup(match?.[1] || '');\n}\n\n// --- BẮT ĐẦU TRÍCH XUẤT ---\n\n// 1. Lấy thông tin cơ bản\nresult['LichAmNgay'] = cleanup(html.match(/<h1 class=\"day\">([\\s\\S]*?)<\\/h1>/i)?.[1] || '');\nresult['NgayDuongLich'] = cleanup(html.match(/Ngày <b>Dương Lịch<\\/b>:<span[^>]+>([^<]+)/i)?.[1] || '');\nresult['NgayAmLich'] = cleanup(html.match(/Ngày <b>Âm Lịch<\\/b>:\\s*<span[^>]+>([^<]+)/i)?.[1] || '');\nresult['NgayTrongTuan'] = cleanup(html.match(/Ngày trong tuần: <b>([^<]+)/i)?.[1] || '');\n\nconst canChiMatch = html.match(/<p>Ngày <b>([^<]+)<\\/b> tháng <b>([^<]+)<\\/b> năm <b>([^<]+)<\\/b><\\/p>/i);\nif (canChiMatch) {\n    result['NgayCanChi'] = `Ngày ${cleanup(canChiMatch[1])} tháng ${cleanup(canChiMatch[2])} năm ${cleanup(canChiMatch[3])}`;\n}\nresult['NgayBachHoKiep'] = cleanup(html.match(/Ngày <b>Bạch Hổ Kiếp<\\/b>:([^<]+)/i)?.[1] || '');\n\n// 2. Trích xuất từng mục còn lại bằng hàm extractByLabel\nresult['GiờHoàngĐạo'] = extractByLabel('Giờ Hoàng Đạo');\nresult['GiờHắcĐạo'] = extractByLabel('Giờ Hắc Đạo');\nresult['CácNgàyKỵ'] = extractByLabel('Các Ngày Kỵ');\nresult['NgũHành'] = extractByLabel('Ngũ Hành');\nresult['BànhTổBáchKỵNhật'] = extractByLabel('Bành Tổ Bách Kỵ Nhật');\nresult['KhổngMinhLụcDiệu'] = extractByLabel('Khổng Minh Lục Diệu');\nresult['NhịThậpBátTú'] = extractByLabel('Nhị Thập Bát Tú');\nresult['ThậpNhịKiếnTrừ'] = extractByLabel('Thập Nhị Kiến Trừ');\nresult['NgọcHạpThôngThư'] = extractByLabel('Ngọc Hạp Thông Thư');\nresult['Hướngxuấthành'] = extractByLabel('Hướng xuất hành');\nresult['GiờxuấthànhTheoLýThuầnPhong'] = extractByLabel('Giờ xuất hành Theo Lý Thuần Phong');\n\n// --- KẾT THÚC TRÍCH XUẤT ---\n\nreturn [{ json: result }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        144,
+        416,
         800
       ],
       "id": "db0e07c3-df66-4eba-b7f1-c695bd2b3a34",
@@ -817,7 +821,7 @@
     },
     {
       "parameters": {
-        "url": "=https://24h.24hstatic.com/ajax/box_lich_van_nien_chi_tiet/index/{{ $json.dateal }}/pc/0/0",
+        "url": "=https://www.xemlicham.com/am-lich/nam/{{ $('Start').item.json.datedl }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -827,7 +831,7 @@
             },
             {
               "name": "Accept",
-              "value": "*/*"
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
             },
             {
               "name": "Accept-Language",
@@ -838,41 +842,98 @@
               "value": "gzip, deflate, br, zstd"
             },
             {
-              "name": "Origin",
-              "value": "https://www.24h.com.vn"
-            },
-            {
               "name": "Connection",
               "value": "keep-alive"
             },
             {
-              "name": "Referer",
-              "value": "https://www.24h.com.vn/"
+              "name": "Upgrade-Insecure-Requests",
+              "value": "1"
             },
             {
               "name": "Sec-Fetch-Dest",
-              "value": "empty"
+              "value": "document"
             },
             {
               "name": "Sec-Fetch-Mode",
-              "value": "cors"
+              "value": "navigate"
             },
             {
               "name": "Sec-Fetch-Site",
-              "value": "cross-site"
+              "value": "same-origin"
+            },
+            {
+              "name": "Sec-Fetch-User",
+              "value": "?1"
+            },
+            {
+              "name": "Priority",
+              "value": "u=0, i"
             }
           ]
         },
-        "options": {}
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -64,
-        800
+        -96,
+        864
       ],
       "id": "b7f45b93-3b52-44b5-9091-22426bc51c6d",
-      "name": "Am Lich"
+      "name": "Am Lich",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Đây là phiên bản rút gọn để lấy thông tin ngày cơ bản.\nconst item = items[0];\nconst rawDataString = item.json.data;\n\nlet html = '';\ntry {\n  // Chuyển chuỗi JSON thành mã HTML hoàn chỉnh.\n  const htmlParts = JSON.parse(rawDataString);\n  html = Array.isArray(htmlParts) ? htmlParts.join('') : rawDataString;\n} catch (e) {\n  html = rawDataString;\n}\n\nconst result = {};\n\n/**\n * Hàm tiện ích để làm sạch văn bản HTML.\n * @param {string} str - Chuỗi HTML đầu vào.\n * @returns {string} - Văn bản sạch.\n */\nfunction cleanup(str) {\n  if (!str) return '';\n  return str.replace(/<[^>]*>?/g, ' ').replace(/\\s+/g, ' ').trim();\n}\n\n// 1. Trích xuất Ngày Dương Lịch\nconst duongLichMatch = html.match(/Ngày <b>Dương Lịch<\\/b>:<span[^>]+>([^<]+)/i);\nresult['NgayDuongLich'] = cleanup(duongLichMatch?.[1] || '');\n\n// 2. Trích xuất Ngày Âm Lịch\nconst amLichMatch = html.match(/Ngày <b>Âm Lịch<\\/b>:\\s*<span[^>]+>([^<]+)/i);\nresult['NgayAmLich'] = cleanup(amLichMatch?.[1] || '');\n\n// 3. Trích xuất Ngày trong tuần\nconst thuMatch = html.match(/Ngày trong tuần: <b>([^<]+)/i);\nresult['NgayTrongTuan'] = cleanup(thuMatch?.[1] || '');\n\n// 4. Trích xuất Ngày Can Chi\nconst canChiMatch = html.match(/<p>Ngày <b>([^<]+)<\\/b> tháng <b>([^<]+)<\\/b> năm <b>([^<]+)<\\/b><\\/p>/i);\nif (canChiMatch) {\n    const ngay = cleanup(canChiMatch[1]);\n    const thang = cleanup(canChiMatch[2]);\n    const nam = cleanup(canChiMatch[3]);\n    result['NgayCanChi'] = `Ngày ${ngay} tháng ${thang} năm ${nam}`;\n} else {\n    result['NgayCanChi'] = '';\n}\n\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        960
+      ],
+      "id": "1f5d1ebc-ad63-4947-ae21-9ecc77951883",
+      "name": "Code6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "75e7b36f-3fc3-459d-a807-1e83af718c98",
+              "leftValue": "={{ $('Start').item.json.chitiet }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        864
+      ],
+      "id": "ef322ccd-b84b-49b2-a0f3-129c5b8d6e06",
+      "name": "If"
     }
   ],
   "pinData": {},
@@ -1065,7 +1126,25 @@
       "main": [
         [
           {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
             "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code6",
             "type": "main",
             "index": 0
           }
@@ -1077,10 +1156,9 @@
   "settings": {
     "executionOrder": "v1",
     "timezone": "Asia/Ho_Chi_Minh",
-    "callerPolicy": "workflowsFromSameOwner",
-    "executionTimeout": -1
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "82f14575-0c61-4423-ae43-2b9f8c1fd55c",
+  "versionId": "0509dd35-22f5-4fae-a973-8da46ff468eb",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e04904b93b64c642161331b8db380cfce5f5f603bd433c2125a1547e4e69cd9c"

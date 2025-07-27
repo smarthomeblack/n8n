@@ -65,7 +65,7 @@
     {
       "parameters": {
         "descriptionType": "manual",
-        "toolDescription": "📨 SEARCH EMAILS: Find emails in Gmail using filters. Optional fields:\n\nExample: Label_ID_Names_or_IDs: INBOX, Received_After: 2025-07-01T00:00:00.00+07:00",
+        "toolDescription": "📨 SEARCH EMAILS: Find emails in Gmail using filters. Optional fields:\n\nExample: Label_ID_Names_or_IDs: INBOX, Received_After: 2025-07-01T00:00:00.00+07:00, Received_Before: 2025-07-01T23:59:00.00+07:00",
         "resource": "thread",
         "filters": {
           "labelIds": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Label_ID_Names_or_IDs', `- Label_ID_Names_or_IDs: Filter by label (INBOX, UNREAD, IMPORTANT, etc)`, 'string') }}",
@@ -433,7 +433,7 @@
     },
     {
       "parameters": {
-        "description": "=    \"This tool is used to look up the following.\",\n    \"Each tool requires different input fields.\",\n    \"Only the specified fields should be filled; all Other fields fill in 0.\",\n    \"Please reply back with full data.\"\n    \"\",\n    \"1. Lottery:\",\n    \"- Required fields: khuvuc (region), date (date of draw)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"2. Traffic Violations & violation:\",\n    \"- Required fields: bienso (license plate), loaixe (vehicle type)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"3. Vehicle Registration (Inspection):\",\n    \"- Required fields: bienso (license plate), temdk (registration code)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"4. Lunar Calendar, Auspicious Hours, Good/Bad Days:\",\n    \"- Required field: dateal (lunar date)\",\n    \"- All other fields must be left empty.\",\n    \"\",\n    \"Your task is to identify which tool to use based on the provided input,\",\n    \"and ensure that only the required fields for that tool are filled in.\"\n",
+        "description": "=    \"This tool is used to look up the following.\",\n    \"Each tool requires different input fields.\",\n    \"Only the specified fields should be filled; all Other fields fill in 0.\",\n    \"Please reply back with full data.\"\n\n    \"1. Lottery:\",\n    \"- Required fields: khuvuc (region), date (date of draw)\",\n    \"- all Other fields fill in 0 \".\n    \"2. Traffic Violations & violation:\",\n    \"- Required fields: bienso (license plate), loaixe (vehicle type)\",\n    \"- all Other fields fill in 0 \".\n\n    \"3. Vehicle Registration (Inspection):\",\n    \"- Required fields: bienso (license plate), temdk (registration code)\",\n    \"- all Other fields fill in 0 \".\n\n    \"4. Lunar calendar lookup, Good hours, Good/Bad days, travel, taboos\"\n    \"-  If only ask about lunar calendar lookup \",\n    \"-  Required field: datedl\",\n    \"- all Other fields fill in 0 \"\n    \"- If need about Good hours, Good/Bad days, travel, taboos\",\n    \"- Required field: datedl , chitiet \",\n    \"- all Other fields fill in 0 \".\n    \"Your task is to identify which tool to use based on the provided input,\",\n",
         "workflowId": {
           "__rl": true,
           "value": "5e9SN4sALNsXj77i",
@@ -448,7 +448,8 @@
             "khuvuc": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('khuvuc', `includes the following areas:\nxsmb: northern lottery\nxsmn: southern lottery\nxsmt: central lottery\nOnly accept values: xsmb, xsmn, xsmt`, 'string') }}",
             "date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date', `date in DD-MM-YYYY format\neg: 2025-07-25`, 'string') }}",
             "temdk": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('temdk', `inspection stamp, or inspection stamp code, stamp code`, 'string') }}",
-            "dateal": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('dateal', `date in YYYY-MM-DD format\neg 2025-07-25`, 'string') }}"
+            "chitiet": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chitiet', `If you need information about Good Hours, Good/Bad Days, Travel, Taboos, fill in: yes`, 'string') }}",
+            "datedl": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('datedl', `format: \"YYYY/month/MM/day/DD\"\nexample: \"2025/thang/7/nam/28\"\nnote to keep the words \"thang\" and \"nam\" intact, not \"month\" and \"year\"`, 'string') }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -494,8 +495,17 @@
               "canBeUsedToMatch": true
             },
             {
-              "id": "dateal",
-              "displayName": "dateal",
+              "id": "datedl",
+              "displayName": "datedl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "chitiet",
+              "displayName": "chitiet",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -795,7 +805,7 @@
     "timezone": "Asia/Ho_Chi_Minh",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "cfc943f1-6b85-4774-a343-5e65ebfa44db",
+  "versionId": "60aefe29-2467-4aa6-ac80-e35b5fa27e94",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e04904b93b64c642161331b8db380cfce5f5f603bd433c2125a1547e4e69cd9c"

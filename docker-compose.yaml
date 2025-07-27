@@ -21,5 +21,6 @@ services:
       - n8n_data:/home/node/.n8n
       - /DATA/AppData/Hass/config/n8n:/config/n8n
 
+
 volumes:
   n8n_data:
