@@ -449,7 +449,7 @@
             "date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('date', `date in DD-MM-YYYY format\neg: 2025-07-25`, 'string') }}",
             "temdk": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('temdk', `inspection stamp, or inspection stamp code, stamp code`, 'string') }}",
             "chitiet": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('chitiet', `If you need information about Good Hours, Good/Bad Days, Travel, Taboos, fill in: yes`, 'string') }}",
-            "datedl": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('datedl', `format: \"YYYY/month/MM/day/DD\"\nexample: \"2025/thang/7/nam/28\"\nnote to keep the words \"thang\" and \"nam\" intact, not \"month\" and \"year\"`, 'string') }}"
+            "datedl": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('datedl', `format: \"YYYY/thang/MM/ngay/DD\"\nexample: \"2025/thang/07/ngay/28\"\nnote to keep the words \"thang\" and \"ngay\" intact, not \"month\" and \"day\"`, 'string') }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -805,7 +805,7 @@
     "timezone": "Asia/Ho_Chi_Minh",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "60aefe29-2467-4aa6-ac80-e35b5fa27e94",
+  "versionId": "e927ce4d-d73c-4b5c-beb2-b3fefda06fb6",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e04904b93b64c642161331b8db380cfce5f5f603bd433c2125a1547e4e69cd9c"
